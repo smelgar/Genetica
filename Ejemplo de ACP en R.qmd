@@ -37,7 +37,7 @@ Antes de realizar el PCA, es importante explorar las variables:
 ```{r}
 #| label: explore-data
 #| fig-height: 8
-
+library(gridExtra)
 # Histogramas para cada variable numérica
 par(mfrow = c(2, 2))
 for (i in 1:4) {
@@ -45,51 +45,57 @@ for (i in 1:4) {
        xlab = "", col = "lightblue", border = "white")
 }
 
+
 # Longitud del sépalo
-ggplot(iris, aes(x = Sepal.Length, fill = Species)) +
+a = ggplot(iris, aes(x = Sepal.Length, fill = Species)) +
   geom_histogram(alpha = 0.6, position = "identity", bins = 20) +
   ggtitle("Distribución de Longitud del Sépalo por especie") +
   theme_minimal()
 
 # Ancho del sépalo
-ggplot(iris, aes(x = Sepal.Width, fill = Species)) +
+b = ggplot(iris, aes(x = Sepal.Width, fill = Species)) +
   geom_histogram(alpha = 0.6, position = "identity", bins = 20) +
   ggtitle("Distribución de Ancho del Sépalo por especie") +
   theme_minimal()
 
 # Longitud del pétalo
-ggplot(iris, aes(x = Petal.Length, fill = Species)) +
+c = ggplot(iris, aes(x = Petal.Length, fill = Species)) +
   geom_histogram(alpha = 0.6, position = "identity", bins = 20) +
   ggtitle("Distribución de Longitud del Pétalo por especie") +
   theme_minimal()
 
 # Ancho del pétalo
-ggplot(iris, aes(x = Petal.Width, fill = Species)) +
+d = ggplot(iris, aes(x = Petal.Width, fill = Species)) +
   geom_histogram(alpha = 0.6, position = "identity", bins = 20) +
   ggtitle("Distribución de Ancho del Pétalo por especie") +
   theme_minimal()
-par(mfrow = c(1, 1))
+grid.arrange(a, b, c, d, ncol = 2)
 
+#par(mfrow = c(1, 1))
+par(mfrow = c(2, 2))
 # Diagramas de caja por especie
-ggplot(iris, aes(x = Species, y = Sepal.Length, fill = Species)) +
+a = ggplot(iris, aes(x = Species, y = Sepal.Length, fill = Species)) +
   geom_boxplot() +
   ggtitle("Longitud del Sépalo por especie") +
   theme_minimal()
 
-ggplot(iris, aes(x = Species, y = Sepal.Width, fill = Species)) +
+b = ggplot(iris, aes(x = Species, y = Sepal.Width, fill = Species)) +
   geom_boxplot() +
   ggtitle("Ancho del Sépalo por especie") +
   theme_minimal()
 
-ggplot(iris, aes(x = Species, y = Petal.Length, fill = Species)) +
+c = ggplot(iris, aes(x = Species, y = Petal.Length, fill = Species)) +
   geom_boxplot() +
   ggtitle("Longitud del Pétalo por especie") +
   theme_minimal()
 
-ggplot(iris, aes(x = Species, y = Petal.Width, fill = Species)) +
+d = ggplot(iris, aes(x = Species, y = Petal.Width, fill = Species)) +
   geom_boxplot() +
   ggtitle("Ancho del Pétalo por especie") +
   theme_minimal()
+grid.arrange(a, b, c, d, ncol = 2)
+
+par(mfrow = c(1, 1))
 ```
 
 **Interpretación:** Podemos observar que las medidas de pétalos (Petal.Length y Petal.Width) muestran una separación más clara entre especies que las medidas de sépalos.
