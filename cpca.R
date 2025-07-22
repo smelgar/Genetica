@@ -37,3 +37,9 @@ round(mod$CPC, 2)
 #
 # The eigenvectors must be the same, as the default method in `cpc` function
 # is the power algorithm proposed by Trendafilov.
+# para la prueba de homogenidad de matrices de varianza-covarianzas, se emplea la prueba M de Box:
+# O usando biotools::boxm
+ library(biotools) # Asegúrate de que esté cargado
+ boxm_test_biotools <- boxM(iris[, c("Sepal.Length", "Sepal.Width", "Petal.Length", "Petal.Width")], iris$Species)
+ print(boxm_test_biotools)
+ 

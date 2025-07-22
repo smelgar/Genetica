@@ -1,6 +1,8 @@
 ---
 title: "Análisis de Componentes Principales (PCA) con el conjunto de datos Iris"
+author: "Sergio Melgar"
 format: html
+lang: es
 editor: visual
 execute:
   echo: true

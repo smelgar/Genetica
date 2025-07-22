@@ -2,10 +2,11 @@
 title: "Eliminación del primer componente principal"
 author: "Sergio Melgar"
 format: html
+lang: es
 editor: visual
 ---
 
-## Eliminación del primer componente principal
+# Eliminación del primer componente principal
 
 Para eliminar el efecto del crecimiento alométrico es necesario hacer un análisis de componentes principales o de componentes principales comunes dependiendo si se trata de una población o de varias, respectivamente.
 
