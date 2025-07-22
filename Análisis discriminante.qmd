@@ -86,20 +86,24 @@ head(datos)
 Antes de aplicar el ADC, es útil visualizar la distribución de las variables para cada grupo. Esto nos puede dar una idea preliminar de si los grupos son separables. Dado que tenemos cuatro variables, es difícil visualizarlas todas a la vez. Sin embargo, podemos ver las distribuciones por pares o usando gráficos de caja.
 
 ```{r}
-# Crear un gráfico de pares para visualizar la superposición de los grupos en las variables originales
-ggplot(datos, aes(x = Longitud, y = Anchura, color = Grupo)) +
-  geom_point(alpha = 0.6) +
-  stat_ellipse(aes(group = Grupo), type = "norm", level = 0.68) + # Elipses de confianza del 68%
-  labs(title = "Dispersión de Longitud vs. Anchura por Grupo",
-       x = "Longitud",
-       y = "Anchura") +
-  theme_minimal() +
-  facet_wrap(~ Grupo) # Muestra un panel por grupo
+library(GGally)
+#| label: pairs-plot
+#| fig-height: 8
+#| fig-width: 10
+
+# Versión mejorada con GGally
+ggpairs(datos, 
+        columns = 1:4,
+        mapping = aes(color = Grupo, alpha = 0.7),
+        upper = list(continuous = wrap("cor", size = 4)),
+        lower = list(continuous = wrap("points", size = 1.5)),
+        diag = list(continuous = wrap("densityDiag", alpha = 0.5))) +
+  theme_bw() +
+  ggtitle("Matriz de gráficos de dispersión por pares") +
+  theme(plot.title = element_text(hjust = 0.5))
 ```
 
-El gráfico de dispersión anterior muestra la relación entre "Longitud" y "Anchura" para cada grupo. Las elipses de confianza del 68% (que representan aproximadamente una desviación estándar en cada dirección) ya sugieren cierta separación entre los grupos, aunque con alguna superposición. Esto es un indicio de que el ADC podría ser efectivo.
-
-------------------------------------------------------------------------
+Los gráficos de dispersión sugieren cierta separación entre los grupos, aunque con alguna superposición. Esto es un indicio de que el ADC podría ser efectivo.
 
 ## Realización del Análisis Discriminante Canónico en R
 
