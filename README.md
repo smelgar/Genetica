@@ -4,3 +4,7 @@
 
 -[Análisis discriminante](https://smelgar.github.io/Genetica/Análisis%20discriminante.html)
 
+-[PCR digital](https://smelgar.github.io/Genetica/pcr_digital_poisson%20(2).html)
+
+
+
