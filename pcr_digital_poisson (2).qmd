@@ -1,0 +1,72 @@
+---
+title: "Distribución de Poisson en PCR Digital"
+format: html
+editor: visual
+---
+
+## Introducción
+
+La **PCR digital (dPCR)** es una técnica de cuantificación absoluta de ácidos nucleicos que se basa en la partición de la muestra en miles de pequeñas reacciones individuales. Cada una de estas reacciones (o gotas) puede contener o no una molécula objetivo.
+
+La distribución de las moléculas en las gotas sigue una **distribución de Poisson**, donde el parámetro $$\lambda$$ representa la **media de moléculas por gota**.
+
+## Distribución de Poisson en dPCR
+
+La probabilidad de que una gota **no contenga ninguna molécula** (es decir, que no haya amplificación) se calcula como:
+
+$$
+P(0) = e^{-\lambda}
+$$
+
+Por lo tanto, el porcentaje de gotas **negativas** es:
+
+$$
+\% \text{Negativas} = e^{-\lambda} \times 100
+$$
+
+Y el porcentaje de gotas **positivas** (con al menos una molécula) es:
+
+$$
+\% \text{Positivas} = (1 - e^{-\lambda}) \times 100
+$$
+
+Cuando $$\lambda = 1$$, el porcentaje de gotas negativas es aproximadamente **37%**, lo que representa un punto óptimo para la cuantificación precisa.
+
+## Visualización en R
+
+```{r}
+library(ggplot2)
+
+# Crear datos
+lambda <- seq(0, 5, length.out = 100)
+p_negativas <- exp(-lambda) * 100
+p_positivas <- (1 - exp(-lambda)) * 100
+datos <- data.frame(lambda, p_negativas, p_positivas)
+
+# Crear gráfica con texto más grande
+ggplot(datos, aes(x = lambda)) +
+  geom_line(aes(y = p_negativas, color = "Negativas"), size = 1) +
+  geom_line(aes(y = p_positivas, color = "Positivas"), size = 1) +
+  geom_vline(xintercept = 1, linetype = "dashed", color = "red", size = 1) +
+  labs(
+    title = "Porcentaje de gotas negativas y \n positivas vs λ en PCR digital",
+    x = "λ (media de moléculas por gota)",
+    y = "Porcentaje de gotas (%)",
+    color = "Tipo de gota"
+  ) +
+  theme_minimal(base_size = 16) +  # Aumenta el tamaño base de la fuente
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 20),
+    axis.title = element_text(size = 18),
+    axis.text = element_text(size = 16),
+    legend.title = element_text(size = 16),
+    legend.text = element_text(size = 14)
+  )
+
+```
+
+### Nota:
+
+-   La línea roja punteada marca **λ = 1**, donde el porcentaje de gotas negativas es aproximadamente **37%**.
+
+-   Este punto representa un **equilibrio ideal** entre sensibilidad y precisión en la estimación de la concentración de ADN.
