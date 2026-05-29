@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Hardy-Weinberg</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            max-width: 800px;
+            width: 100%;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-top: 0;
+        }
+        .intro {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 25px;
+        }
+        .control-panel {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 5px solid #3498db;
+        }
+        .slider-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+        }
+        input[type=range] {
+            flex-grow: 1;
+            height: 8px;
+            border-radius: 5px;
+            background: #d3d3d3;
+            outline: none;
+        }
+        .value-display {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #2c3e50;
+            min-width: 80px;
+            text-align: right;
+        }
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        .card {
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            text-align: center;
+        }
+        .card h3 {
+            margin: 0 0 10px 0;
+            font-size: 0.9rem;
+            color: #7f8c8d;
+            text-transform: uppercase;
+        }
+        .card p {
+            margin: 0;
+            font-size: 1.4rem;
+            font-weight: bold;
+        }
+        .p2 { border-top: 4px solid #3498db; color: #3498db; }
+        .two-pq { border-top: 4px solid #e67e22; color: #e67e22; }
+        .q2 { border-top: 4px solid #2ecc71; color: #2ecc71; }
+        
+        .chart-container {
+            position: relative;
+            height: 400px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🧬 Simulador de Hardy-Weinberg</h1>
+    <p class="intro">Ajusta la frecuencia del alelo recesivo (q) para ver los datos reales calculados sobre las curvas de distribución teórica del modelo.</p>
+
+    <div class="control-panel">
+        <div class="slider-container">
+            <label for="q-slider" style="font-weight: bold;">Frecuencia de q:</label>
+            <input type="range" id="q-slider" min="0" max="1" step="0.01" value="0.4">
+            <span class="value-display" id="q-val">0.40</span>
+        </div>
+        <div style="text-align: center; margin-top: 5px; font-size: 0.9rem; color: #7f8c8d;">
+            Frecuencia de p (calculada): <span id="p-val" style="font-weight: bold;">0.60</span>
+        </div>
+    </div>
+
+    <div class="results-grid">
+        <div class="card p2">
+            <h3>Homocigoto Dominante (p²)</h3>
+            <p id="res-p2">0.3600</p>
+        </div>
+        <div class="card two-pq">
+            <h3>Heterocigoto (2pq)</h3>
+            <p id="res-2pq">0.4800</p>
+        </div>
+        <div class="card q2">
+            <h3>Homocigoto Recesivo (q²)</h3>
+            <p id="res-q2">0.1600</p>
+        </div>
+    </div>
+
+    <div class="chart-container">
+        <canvas id="hwChart"></canvas>
+    </div>
+</div>
+
+<script>
+    // --- 1. Generar los datos de fondo (Teóricos de 0 a 1) ---
+    const q_coords = [];
+    const p2_coords = [];
+    const twopq_coords = [];
+    const q2_coords = [];
+
+    for (let i = 0; i <= 100; i++) {
+        let q_teorico = i / 100;
+        let p_teorico = 1 - q_teorico;
+        
+        q_coords.push(q_teorico);
+        p2_coords.push({x: q_teorico, y: Math.pow(p_teorico, 2)});
+        twopq_coords.push({x: q_teorico, y: 2 * p_teorico * q_teorico});
+        q2_coords.push({x: q_teorico, y: Math.pow(q_teorico, 2)});
+    }
+
+    // --- 2. Inicializar el gráfico con Chart.js ---
+    const ctx = document.getElementById('hwChart').getContext('2d');
+    const hwChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            datasets: [
+                // Curvas teóricas de fondo
+                { label: 'p² (Homocigoto Dominante)', data: p2_coords, borderColor: '#3498db', borderWidth: 2, pointRadius: 0, fill: false, tension: 0.1 },
+                { label: '2pq (Heterocigoto)', data: twopq_coords, borderColor: '#e67e22', borderWidth: 2, pointRadius: 0, fill: false, tension: 0.1 },
+                { label: 'q² (Homocigoto Recesivo)', data: q2_coords, borderColor: '#2ecc71', borderWidth: 2, pointRadius: 0, fill: false, tension: 0.1 },
+                // Datos reales (puntos que se moverán)
+                { 
+                    label: 'Puntos de valor real', 
+                    data: [], 
+                    backgroundColor: ['#3498db', '#e67e22', '#2ecc71'], 
+                    pointRadius: 6, 
+                    pointHoverRadius: 8,
+                    showLine: false,
+                    pointBorderColor: '#2c3e50',
+                    pointBorderWidth: 2
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: { type: 'linear', min: 0, max: 1, title: { display: true, text: 'Frecuencia del alelo recesivo (q)', font: { size: 14 } } },
+                y: { min: 0, max: 1, title: { display: true, text: 'Frecuencia Genotípica', font: { size: 14 } } }
+            },
+            plugins: {
+                legend: { position: 'bottom' }
+            }
+        }
+    });
+
+    // --- 3. Lógica de actualización interactiva ---
+    const slider = document.getElementById('q-slider');
+    const qValSpan = document.getElementById('q-val');
+    const pValSpan = document.getElementById('p-val');
+    const resP2 = document.getElementById('res-p2');
+    const res2Q = document.getElementById('res-2pq');
+    const resQ2 = document.getElementById('res-q2');
+
+    function actualizarSimulador() {
+        let q = parseFloat(slider.value);
+        let p = 1 - q;
+
+        let p2 = Math.pow(p, 2);
+        let twopq = 2 * p * q;
+        let q2 = Math.pow(q, 2);
+
+        // Actualizar textos en la interfaz
+        qValSpan.innerText = q.toFixed(2);
+        pValSpan.innerText = p.toFixed(2);
+        resP2.innerText = p2.toFixed(4);
+        res2Q.innerText = twopq.toFixed(4);
+        resQ2.innerText = q2.toFixed(4);
+
+        // Actualizar los puntos específicos en la gráfica
+        hwChart.data.datasets[3].data = [
+            {x: q, y: p2},
+            {x: q, y: twopq},
+            {x: q, y: q2}
+        ];
+
+        // Forzar rediseño del gráfico
+        hwChart.update();
+    }
+
+    // Escuchar el movimiento del slider
+    slider.addEventListener('input', actualizarSimulador);
+
+    // Ejecución inicial al cargar la página
+    actualizarSimulador();
+</script>
+
+</body>
+</html>
