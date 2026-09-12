@@ -8,4 +8,5 @@
 
 -[Simulador de equilibrio H-W](https://smelgar.github.io/Genetica/Simulador%20HW.html)
 
+-[Simulador de genética cuantitativa](https://smelgar.github.io/Genetica/genetica_cuantitativa_simulacion.html)
 
