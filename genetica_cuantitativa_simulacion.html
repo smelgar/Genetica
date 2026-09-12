@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Número de loci y distribución del carácter cuantitativo</title>
+<style>
+  :root {
+    --bg: #f7f8fa;
+    --panel: #ffffff;
+    --ink: #1f2933;
+    --muted: #5b6470;
+    --accent: #2563eb;
+    --accent-soft: #93c5fd;
+    --bar: #4a7fd6;
+    --curve: #d64545;
+    --border: #e2e5e9;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+  }
+  .wrap {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 28px 20px 60px;
+  }
+  h1 {
+    font-size: 1.5rem;
+    margin-bottom: 4px;
+  }
+  .subtitle {
+    color: var(--muted);
+    margin-top: 0;
+    margin-bottom: 24px;
+    font-size: 0.95rem;
+  }
+  .layout {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 20px;
+  }
+  @media (max-width: 800px) {
+    .layout { grid-template-columns: 1fr; }
+  }
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 20px;
+  }
+  .control { margin-bottom: 18px; }
+  .control label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.88rem;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .control label span.val {
+    color: var(--accent);
+    font-weight: 700;
+  }
+  input[type="range"] { width: 100%; accent-color: var(--accent); }
+  input[type="number"] {
+    width: 100%;
+    padding: 6px 8px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 0.9rem;
+  }
+  .help {
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-top: 4px;
+    line-height: 1.35;
+  }
+  .checkrow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    font-size: 0.88rem;
+  }
+  button {
+    width: 100%;
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 6px;
+  }
+  button:hover { background: #1d4fd1; }
+  canvas {
+    width: 100%;
+    height: 380px;
+    display: block;
+  }
+  .stats {
+    margin-top: 14px;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    background: #f1f4f8;
+    border-radius: 8px;
+    padding: 12px 16px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px 18px;
+  }
+  .stats b { color: var(--accent); }
+  .note {
+    font-size: 0.82rem;
+    color: var(--muted);
+    margin-top: 14px;
+    line-height: 1.5;
+  }
+  .legend {
+    display: flex;
+    gap: 16px;
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-top: 6px;
+    flex-wrap: wrap;
+  }
+  .swatch {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    margin-right: 5px;
+    vertical-align: middle;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Número de loci y distribución de un carácter cuantitativo</h1>
+  <p class="subtitle">Simulación interactiva: cada locus aporta 0, 1 o 2 copias del alelo A1 (Hardy–Weinberg); el valor genotípico es la suma aditiva entre loci, más una desviación ambiental.</p>
+
+  <div class="layout">
+    <div class="panel">
+      <div class="control">
+        <label>Número de loci <span class="val" id="lociVal">1</span></label>
+        <input type="range" id="nLoci" min="1" max="20" step="1" value="1">
+      </div>
+
+      <div class="control">
+        <label>Frecuencia del alelo A1 (p) <span class="val" id="pVal">0.50</span></label>
+        <input type="range" id="freqP" min="0.05" max="0.95" step="0.05" value="0.5">
+      </div>
+
+      <div class="control">
+        <label>Dominancia (d/a) <span class="val" id="domVal">0.0</span></label>
+        <input type="range" id="dominance" min="-1.5" max="1.5" step="0.1" value="0">
+        <div class="help">0 = sin dominancia · 1 = dominancia completa de A1 · −1 = dominancia completa de A2 · |d/a| &gt; 1 = sobredominancia</div>
+      </div>
+
+      <div class="control">
+        <label>Desv. estándar ambiental (VE) <span class="val" id="envVal">0.0</span></label>
+        <input type="range" id="envSd" min="0" max="5" step="0.1" value="0">
+      </div>
+
+      <div class="control">
+        <label>Tamaño de la población</label>
+        <input type="number" id="nInd" value="5000" min="100" max="50000" step="100">
+      </div>
+
+      <div class="checkrow">
+        <input type="checkbox" id="showNormal" checked>
+        <label for="showNormal">Superponer curva normal ajustada</label>
+      </div>
+      <div class="checkrow">
+        <input type="checkbox" id="showComponents">
+        <label for="showComponents">Colorear por dosis total (≤10 loci)</label>
+      </div>
+
+      <button id="resample">Volver a muestrear</button>
+    </div>
+
+    <div class="panel">
+      <canvas id="chart"></canvas>
+      <div class="legend" id="legend"></div>
+      <div class="stats" id="stats"></div>
+      <p class="note">Cada corrida genera una nueva muestra aleatoria de la población. Comparen cómo cambia la forma de la distribución al mover el número de loci de 1 a 20, y cómo la varianza ambiental hace que las clases genotípicas se traslapen incluso con pocos loci.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+// ---------------------------------------------------------------------
+// Utilidades numéricas
+// ---------------------------------------------------------------------
+function randn() {
+  // Box-Muller
+  let u = 0, v = 0;
+  while (u === 0) u = Math.random();
+  while (v === 0) v = Math.random();
+  return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+}
+
+function doseForLocus(p) {
+  // 2 ensayos Bernoulli(p) -> dosis de A1: 0, 1 o 2
+  let d = 0;
+  if (Math.random() < p) d++;
+  if (Math.random() < p) d++;
+  return d;
+}
+
+function locusValue(dose, dOverA) {
+  const a = 1, d = dOverA * a;
+  if (dose === 2) return a;
+  if (dose === 1) return d;
+  return -a;
+}
+
+function mean(arr) { return arr.reduce((s, x) => s + x, 0) / arr.length; }
+function variance(arr) {
+  const m = mean(arr);
+  return arr.reduce((s, x) => s + (x - m) * (x - m), 0) / (arr.length - 1);
+}
+
+// ---------------------------------------------------------------------
+// Simulación
+// ---------------------------------------------------------------------
+function simulate() {
+  const k = parseInt(document.getElementById('nLoci').value, 10);
+  const p = parseFloat(document.getElementById('freqP').value);
+  const dOverA = parseFloat(document.getElementById('dominance').value);
+  const envSd = parseFloat(document.getElementById('envSd').value);
+  const n = Math.max(100, Math.min(50000, parseInt(document.getElementById('nInd').value, 10) || 5000));
+
+  const genotypic = new Float64Array(n);
+  const totalDose = new Int16Array(n);
+  const phenotype = new Float64Array(n);
+
+  for (let i = 0; i < n; i++) {
+    let g = 0, dose = 0;
+    for (let l = 0; l < k; l++) {
+      const d = doseForLocus(p);
+      dose += d;
+      g += locusValue(d, dOverA);
+    }
+    genotypic[i] = g;
+    totalDose[i] = dose;
+    phenotype[i] = g + randn() * envSd;
+  }
+
+  return { genotypic, totalDose, phenotype, n, k };
+}
+
+// ---------------------------------------------------------------------
+// Dibujo (canvas nativo, sin dependencias externas)
+// ---------------------------------------------------------------------
+const doseColors = [
+  '#c7d9f5', '#a9c4ef', '#8bb0e9', '#6d9ce3', '#4f88dd',
+  '#3a74cf', '#2f60b8', '#264ea0', '#1e3d88', '#173070',
+  '#102459', '#0a1a44', '#0a1a44', '#0a1a44', '#0a1a44',
+  '#0a1a44', '#0a1a44', '#0a1a44', '#0a1a44', '#0a1a44', '#0a1a44'
+];
+
+function draw(result) {
+  const canvas = document.getElementById('chart');
+  const dpr = window.devicePixelRatio || 1;
+  const cssW = canvas.clientWidth, cssH = 380;
+  canvas.width = cssW * dpr;
+  canvas.height = cssH * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, cssW, cssH);
+
+  const { phenotype, totalDose, n, k } = result;
+  const showComponents = document.getElementById('showComponents').checked && k <= 10;
+  const showNormal = document.getElementById('showNormal').checked;
+
+  const minV = Math.min(...phenotype), maxV = Math.max(...phenotype);
+  const range = (maxV - minV) || 1;
+  const nBins = 60;
+  const binW = range / nBins;
+
+  // histograma, opcionalmente apilado por dosis total
+  const maxDose = 2 * k;
+  const bins = Array.from({ length: nBins }, () => showComponents ? new Array(maxDose + 1).fill(0) : 0);
+
+  for (let i = 0; i < n; i++) {
+    let bIdx = Math.floor((phenotype[i] - minV) / binW);
+    if (bIdx >= nBins) bIdx = nBins - 1;
+    if (bIdx < 0) bIdx = 0;
+    if (showComponents) {
+      bins[bIdx][totalDose[i]]++;
+    } else {
+      bins[bIdx]++;
+    }
+  }
+
+  const maxCount = showComponents
+    ? Math.max(...bins.map(b => b.reduce((s, x) => s + x, 0)))
+    : Math.max(...bins);
+
+  const marginL = 55, marginR = 20, marginT = 20, marginB = 40;
+  const plotW = cssW - marginL - marginR;
+  const plotH = cssH - marginT - marginB;
+
+  // ejes
+  ctx.strokeStyle = '#c3c9d1';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(marginL, marginT);
+  ctx.lineTo(marginL, marginT + plotH);
+  ctx.lineTo(marginL + plotW, marginT + plotH);
+  ctx.stroke();
+
+  // barras
+  const barW = plotW / nBins;
+  for (let b = 0; b < nBins; b++) {
+    const x = marginL + b * barW;
+    if (showComponents) {
+      let yCursor = marginT + plotH;
+      for (let d = 0; d <= maxDose; d++) {
+        const count = bins[b][d];
+        if (!count) continue;
+        const h = (count / maxCount) * plotH;
+        ctx.fillStyle = doseColors[d] || '#0a1a44';
+        ctx.fillRect(x, yCursor - h, Math.max(barW - 1, 1), h);
+        yCursor -= h;
+      }
+    } else {
+      const h = (bins[b] / maxCount) * plotH;
+      ctx.fillStyle = '#4a7fd6';
+      ctx.fillRect(x, marginT + plotH - h, Math.max(barW - 1, 1), h);
+    }
+  }
+
+  // curva normal superpuesta
+  if (showNormal) {
+    const m = mean(phenotype);
+    const s = Math.sqrt(variance(phenotype)) || 1;
+    const peakDensity = 1 / (s * Math.sqrt(2 * Math.PI));
+    ctx.strokeStyle = '#d64545';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (let px = 0; px <= plotW; px++) {
+      const x = minV + (px / plotW) * range;
+      const density = Math.exp(-0.5 * Math.pow((x - m) / s, 2)) / (s * Math.sqrt(2 * Math.PI));
+      const y = marginT + plotH - (density / peakDensity) * plotH * 0.92;
+      if (px === 0) ctx.moveTo(marginL + px, y); else ctx.lineTo(marginL + px, y);
+    }
+    ctx.stroke();
+  }
+
+  // etiquetas eje x
+  ctx.fillStyle = '#5b6470';
+  ctx.font = '11px sans-serif';
+  ctx.textAlign = 'center';
+  for (let t = 0; t <= 4; t++) {
+    const val = minV + (t / 4) * range;
+    const x = marginL + (t / 4) * plotW;
+    ctx.fillText(val.toFixed(1), x, marginT + plotH + 16);
+  }
+  ctx.textAlign = 'right';
+  ctx.fillText('Valor fenotípico', marginL + plotW, marginT + plotH + 32);
+
+  ctx.save();
+  ctx.translate(16, marginT + plotH / 2);
+  ctx.rotate(-Math.PI / 2);
+  ctx.textAlign = 'center';
+  ctx.fillText('Frecuencia', 0, 0);
+  ctx.restore();
+
+  // leyenda
+  const legend = document.getElementById('legend');
+  legend.innerHTML = '';
+  if (showComponents) {
+    for (let d = 0; d <= maxDose; d++) {
+      const el = document.createElement('span');
+      el.innerHTML = `<span class="swatch" style="background:${doseColors[d] || '#0a1a44'}"></span>dosis ${d}`;
+      legend.appendChild(el);
+    }
+  }
+  if (showNormal) {
+    const el = document.createElement('span');
+    el.innerHTML = `<span class="swatch" style="background:#d64545"></span>normal ajustada`;
+    legend.appendChild(el);
+  }
+}
+
+function updateStats(result) {
+  const g = result.genotypic, ph = result.phenotype;
+  const vg = variance(g);
+  const ve = variance(ph.map((v, i) => v - g[i]));
+  const vp = variance(ph);
+  const h2 = vp > 0 ? (vg / vp) : NaN;
+  const nClasses = 2 * result.k + 1;
+
+  document.getElementById('stats').innerHTML = `
+    <div>Media fenotípica: <b>${mean(ph).toFixed(3)}</b></div>
+    <div>Clases genotípicas posibles: <b>${nClasses}</b></div>
+    <div>Varianza genotípica (V<sub>G</sub>): <b>${vg.toFixed(3)}</b></div>
+    <div>Varianza ambiental (V<sub>E</sub>): <b>${ve.toFixed(3)}</b></div>
+    <div>Varianza fenotípica (V<sub>P</sub>): <b>${vp.toFixed(3)}</b></div>
+    <div>Heredabilidad amplia (V<sub>G</sub>/V<sub>P</sub>): <b>${isNaN(h2) ? '—' : h2.toFixed(3)}</b></div>
+  `;
+}
+
+function refresh() {
+  document.getElementById('lociVal').textContent = document.getElementById('nLoci').value;
+  document.getElementById('pVal').textContent = parseFloat(document.getElementById('freqP').value).toFixed(2);
+  document.getElementById('domVal').textContent = parseFloat(document.getElementById('dominance').value).toFixed(1);
+  document.getElementById('envVal').textContent = parseFloat(document.getElementById('envSd').value).toFixed(1);
+
+  const result = simulate();
+  draw(result);
+  updateStats(result);
+}
+
+['nLoci', 'freqP', 'dominance', 'envSd', 'nInd', 'showNormal', 'showComponents'].forEach(id => {
+  document.getElementById(id).addEventListener('input', refresh);
+});
+document.getElementById('resample').addEventListener('click', refresh);
+window.addEventListener('resize', refresh);
+
+refresh();
+</script>
+</body>
+</html>
