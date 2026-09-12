@@ -6,5 +6,6 @@
 
 -[PCR digital](https://smelgar.github.io/Genetica/pcr_digital_poisson%20(2).html)
 
+-[Simulador de equilibrio H-W](https://smelgar.github.io/Genetica/Simulador%20HW.html)
 
 
