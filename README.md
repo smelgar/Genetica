@@ -10,3 +10,7 @@
 
 -[Simulador de genética cuantitativa](https://smelgar.github.io/Genetica/genetica_cuantitativa_simulacion.html)
 
+-[Simulador de heredabilidad con promedio de padres y promedio de hijos](https://smelgar.github.io/Genetica/heredabilidad_padres_hijos%20Claude.html)
+
+-[Simulador de heredabilidad con medios hermanos](https://smelgar.github.io/Genetica/Heredabilidad%20hermanos%20Claude.html)
+
