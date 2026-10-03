@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Heredabilidad: promedio de padres vs promedio de hijos</title>
+<style>
+:root{--bg:#f3f6f7;--panel:#fff;--ink:#16202a;--mut:#5b6873;--line:#d3dbe0;--obs:#1b7f9e;--tru:#c2410c;--shade:#e9eef0}
+@media(prefers-color-scheme:dark){:root{--bg:#0e1418;--panel:#161e24;--ink:#e6edf1;--mut:#93a1ab;--line:#2b373f;--obs:#4fb8d6;--tru:#f08a4b;--shade:#1d2830}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:1080px;margin:0 auto;padding:20px 16px 40px}
+h1{font-size:1.6rem;margin:0 0 4px;font-weight:650}
+h2{font-size:1.05rem;margin:0 0 8px;font-weight:650}
+p{margin:0 0 8px;max-width:72ch}
+.sub{color:var(--mut);margin-bottom:16px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px 16px;margin-bottom:14px}
+.ctrl{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px 22px}
+label{display:block;font-weight:600;font-size:.92rem}
+label output{float:right;font-variant-numeric:tabular-nums;color:var(--obs)}
+input[type=range]{width:100%;accent-color:var(--obs)}
+.btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+button{font:inherit;font-weight:600;padding:8px 14px;border-radius:6px;border:1px solid var(--obs);background:var(--obs);color:#fff;cursor:pointer}
+button.alt{background:transparent;color:var(--obs)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--tru);outline-offset:2px}
+.grid{display:grid;grid-template-columns:1.25fr 1fr;gap:14px}
+@media(max-width:820px){.grid{grid-template-columns:1fr}}
+canvas{width:100%;height:330px;display:block}
+.big{font-size:1.5rem;font-weight:700;font-variant-numeric:tabular-nums}
+.k{display:flex;flex-wrap:wrap;gap:8px 24px;margin-top:8px}
+.k div{min-width:130px}.k small{display:block;color:var(--mut)}
+.t{color:var(--tru)}.o{color:var(--obs)}
+.note{color:var(--mut);font-size:.9rem}
+.theory li{margin-bottom:4px}
+.sw{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px}
+</style>
+</head>
+<body>
+<main>
+<h1>Heredabilidad: promedio de padres y promedio de hijos</h1>
+<p class="sub">Se forman parejas al azar, se mide el promedio de los dos padres y el promedio de sus hijos. La pendiente de la regresión del hijo sobre el promedio de los padres estima h².</p>
+
+<section class="panel" aria-label="Parámetros">
+<div class="ctrl">
+<label>h² verdadera <output id="oh">0.50</output><input id="h2" type="range" min="0" max="1" step="0.05" value="0.5"></label>
+<label>Parejas de padres <output id="op">100</output><input id="np" type="range" min="10" max="500" step="10" value="100"></label>
+<label>Hijos por pareja <output id="ok">3</output><input id="k" type="range" min="1" max="20" step="1" value="3"></label>
+<label>Padres seleccionados (mejores) <output id="oq">20 %</output><input id="q" type="range" min="5" max="95" step="5" value="20"></label>
+</div>
+<p class="note" style="margin-top:10px">Varianza fenotípica 100, media 100. Apareamiento al azar, sin ambiente común entre padres e hijos.</p>
+<div class="btns">
+<button id="b1">Nueva muestra</button>
+<button id="b2" class="alt">Repetir 1000 veces</button>
+</div>
+</section>
+
+<div class="grid">
+<section class="panel">
+<h2>Hijos vs promedio de los padres</h2>
+<canvas id="c1" role="img" aria-label="Dispersión del promedio de hijos contra el promedio de padres"></canvas>
+<p class="note"><span class="sw" style="background:var(--obs)"></span>Parejas &nbsp; <span class="sw" style="background:var(--tru)"></span>Parejas seleccionadas<br>
+Línea sólida: regresión estimada. Línea punteada: pendiente verdadera h². Las líneas de trazos finos son las medias de padres e hijos.</p>
+</section>
+<section class="panel">
+<h2>Regresión</h2>
+<div class="k">
+<div><small>Pendiente b = h² estimada</small><span id="b" class="big o"></span></div>
+<div><small>Error estándar</small><span id="se" class="big"></span></div>
+<div><small>h² verdadera</small><span id="ht" class="big t"></span></div>
+</div>
+<h2 style="margin-top:18px">Respuesta a la selección</h2>
+<div class="k">
+<div><small>Diferencial S</small><span id="S" class="big"></span></div>
+<div><small>Respuesta R</small><span id="R" class="big"></span></div>
+<div><small>h² realizada = R/S</small><span id="hr" class="big o"></span></div>
+</div>
+<p id="msg" class="note" style="margin-top:10px"></p>
+</section>
+</div>
+
+<section class="panel">
+<h2>Repeticiones: distribución de la pendiente estimada</h2>
+<canvas id="c2" style="height:250px" role="img" aria-label="Histograma de pendientes estimadas"></canvas>
+<div class="k" id="rs"><span class="note">Presiona «Repetir 1000 veces» para ver cuánto varía la estimación entre muestras.</span></div>
+</section>
+
+<section class="panel theory">
+<h2>Qué hay detrás</h2>
+<ul>
+<li>El valor genético de un hijo es el promedio de los de sus padres más un término de segregación mendeliana. Por eso Cov(hijo, promedio de padres) = ½ V<sub>A</sub>.</li>
+<li>La varianza del promedio de los padres es ½ V<sub>P</sub>. La pendiente es entonces ½V<sub>A</sub> / ½V<sub>P</sub> = <b>h²</b>.</li>
+<li>Con un solo padre la pendiente es h²/2, y por eso se multiplica por 2. Con el promedio de los dos padres no hace falta.</li>
+<li>La respuesta a la selección es R = h² · S. Si seleccionas los mejores padres, los hijos recuperan solo la fracción h² del diferencial.</li>
+<li>Más parejas reduce el error de la pendiente. Más hijos por pareja ayuda poco, porque el error ambiental de los padres no desaparece.</li>
+</ul>
+</section>
+</main>
+
+<script>
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+function randn(){let u=0;while(!u)u=Math.random();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*Math.random())}
+const par=()=>({h:+$('h2').value,n:+$('np').value,k:+$('k').value,q:+$('q').value/100});
+const mean=a=>a.reduce((x,y)=>x+y,0)/a.length;
+
+function sim(p){
+  const VA=p.h*100,VE=100-VA,sA=Math.sqrt(VA),sE=Math.sqrt(VE),sM=Math.sqrt(VA/2);
+  const ind=()=>{const a=sA*randn();return{a,p:100+a+sE*randn()}};
+  const d=[];
+  for(let i=0;i<p.n;i++){
+    const f=ind(),m=ind(),mid=(f.a+m.a)/2;let s=0;
+    for(let j=0;j<p.k;j++)s+=100+mid+sM*randn()+sE*randn();
+    d.push({x:(f.p+m.p)/2,y:s/p.k});
+  }
+  return d;
+}
+function reg(d){
+  const mx=mean(d.map(v=>v.x)),my=mean(d.map(v=>v.y));let sxx=0,sxy=0;
+  d.forEach(v=>{sxx+=(v.x-mx)**2;sxy+=(v.x-mx)*(v.y-my)});
+  const b=sxy/sxx,a=my-b*mx;let sse=0;d.forEach(v=>sse+=(v.y-a-b*v.x)**2);
+  return{b,a,mx,my,se:Math.sqrt(sse/(d.length-2)/sxx)};
+}
+function sel(d,q){
+  const s=[...d].sort((u,v)=>v.x-u.x),m=Math.max(2,Math.round(d.length*q)),top=s.slice(0,m),cut=top[m-1].x;
+  const S=mean(top.map(v=>v.x))-mean(d.map(v=>v.x)),R=mean(top.map(v=>v.y))-mean(d.map(v=>v.y));
+  return{cut,S,R,hr:R/S};
+}
+function prep(c){
+  const r=window.devicePixelRatio||1,w=c.clientWidth,h=c.clientHeight;
+  c.width=w*r;c.height=h*r;const x=c.getContext('2d');x.setTransform(r,0,0,r,0,0);x.clearRect(0,0,w,h);
+  x.font='12px system-ui,sans-serif';return[x,w,h];
+}
+let cur=null,reps=null;
+
+function drawScatter(){
+  if(!cur)return;
+  const[x,w,h]=prep($('c1')),P={l:44,r:10,t:10,b:30},d=cur.d;
+  const vs=d.flatMap(v=>[v.x,v.y]);let lo=Math.min(...vs),hi=Math.max(...vs);const pd=(hi-lo)*.05;lo-=pd;hi+=pd;
+  const X=v=>P.l+(v-lo)/(hi-lo)*(w-P.l-P.r),Y=v=>h-P.b-(v-lo)/(hi-lo)*(h-P.t-P.b);
+  x.strokeStyle=css('--line');x.fillStyle=css('--mut');x.lineWidth=1;x.textAlign='right';
+  for(let i=0;i<=4;i++){const v=lo+(hi-lo)*i/4;x.beginPath();x.moveTo(P.l,Y(v));x.lineTo(w-P.r,Y(v));x.stroke();x.fillText(v.toFixed(0),P.l-6,Y(v)+4)}
+  x.textAlign='center';
+  for(let i=0;i<=4;i++){const v=lo+(hi-lo)*i/4;x.fillText(v.toFixed(0),X(v),h-P.b+15)}
+  x.fillText('Promedio de los padres',(P.l+w-P.r)/2,h-3);
+  x.save();x.translate(11,(P.t+h-P.b)/2);x.rotate(-Math.PI/2);x.fillText('Promedio de los hijos',0,0);x.restore();
+  x.setLineDash([3,3]);x.strokeStyle=css('--mut');
+  x.beginPath();x.moveTo(X(cur.r.mx),P.t);x.lineTo(X(cur.r.mx),h-P.b);x.moveTo(P.l,Y(cur.r.my));x.lineTo(w-P.r,Y(cur.r.my));x.stroke();
+  x.setLineDash([]);
+  d.forEach(v=>{const s=v.x>=cur.s.cut;x.fillStyle=s?css('--tru'):css('--obs');x.globalAlpha=s?.9:.45;x.beginPath();x.arc(X(v.x),Y(v.y),3,0,6.283);x.fill()});
+  x.globalAlpha=1;
+  const line=(b,dash,c)=>{x.setLineDash(dash);x.strokeStyle=c;x.lineWidth=2.5;x.beginPath();
+    x.moveTo(X(lo),Y(cur.r.my+b*(lo-cur.r.mx)));x.lineTo(X(hi),Y(cur.r.my+b*(hi-cur.r.mx)));x.stroke();x.setLineDash([])};
+  line(cur.p.h,[7,5],css('--tru'));line(cur.r.b,[],css('--obs'));
+}
+function drawHist(){
+  const[x,w,h]=prep($('c2'));if(!reps)return;
+  const P={l:42,r:10,t:10,b:30},lo=-0.5,hi=1.5,nb=40,bw=(hi-lo)/nb,cnt=new Array(nb).fill(0);
+  reps.b.forEach(v=>{cnt[Math.max(0,Math.min(nb-1,Math.floor((v-lo)/bw)))]++});
+  const mx=Math.max(...cnt),X=v=>P.l+(v-lo)/(hi-lo)*(w-P.l-P.r),Y=c=>h-P.b-c/mx*(h-P.b-P.t);
+  x.fillStyle=css('--shade');x.fillRect(X(lo),P.t,X(0)-X(lo),h-P.b-P.t);x.fillRect(X(1),P.t,X(hi)-X(1),h-P.b-P.t);
+  x.fillStyle=css('--obs');x.globalAlpha=.8;
+  cnt.forEach((c,i)=>x.fillRect(X(lo+i*bw)+1,Y(c),(w-P.l-P.r)/nb-2,h-P.b-Y(c)));x.globalAlpha=1;
+  x.strokeStyle=css('--mut');x.beginPath();x.moveTo(P.l,h-P.b);x.lineTo(w-P.r,h-P.b);x.stroke();
+  x.fillStyle=css('--mut');x.textAlign='center';
+  for(let v=lo;v<=hi+1e-9;v+=.25)x.fillText(v.toFixed(2),X(v),h-16);
+  x.fillText('Pendiente estimada (zona sombreada: fuera de 0–1)',(P.l+w-P.r)/2,h-3);
+  x.textAlign='right';x.fillText(mx,P.l-6,P.t+8);x.fillText(0,P.l-6,h-P.b);
+  x.lineWidth=2.5;x.strokeStyle=css('--tru');x.beginPath();x.moveTo(X(reps.p.h),P.t);x.lineTo(X(reps.p.h),h-P.b);x.stroke();
+  x.setLineDash([6,4]);x.strokeStyle=css('--obs');x.beginPath();x.moveTo(X(reps.m),P.t);x.lineTo(X(reps.m),h-P.b);x.stroke();x.setLineDash([]);
+}
+function one(){
+  const p=par(),d=sim(p),r=reg(d),s=sel(d,p.q);cur={p,d,r,s};
+  const f=(v,n=2)=>v.toFixed(n);
+  $('b').textContent=f(r.b);$('se').textContent='± '+f(r.se);$('ht').textContent=f(p.h);
+  $('S').textContent=f(s.S);$('R').textContent=f(s.R);$('hr').textContent=f(s.hr);
+  $('msg').textContent=Math.abs(r.b-p.h)<=r.se?'La pendiente cae dentro de ± 1 error estándar de la h² verdadera.':
+    'La pendiente está a más de 1 error estándar de la h² verdadera. Ocurre en cerca de un tercio de las muestras.';
+  drawScatter();
+}
+function many(){
+  const p=par(),bs=[];
+  for(let i=0;i<1000;i++)bs.push(reg(sim(p)).b);
+  const m=mean(bs),sd=Math.sqrt(bs.reduce((x,y)=>x+(y-m)**2,0)/999);
+  reps={b:bs,m,p};
+  $('rs').innerHTML=`<div><small>Media de las pendientes</small><span class="big o">${m.toFixed(2)}</span></div>
+  <div><small>h² verdadera</small><span class="big t">${p.h.toFixed(2)}</span></div>
+  <div><small>Desv. estándar observada</small><span class="big">${sd.toFixed(2)}</span></div>
+  <p class="note" style="width:100%;margin:6px 0 0">El estimador es insesgado: la media coincide con h². Línea naranja: valor verdadero. Línea punteada: media de las estimaciones.</p>`;
+  drawHist();
+}
+function upd(){
+  const p=par();$('oh').textContent=p.h.toFixed(2);$('op').textContent=p.n;$('ok').textContent=p.k;$('oq').textContent=Math.round(p.q*100)+' %';
+  reps=null;$('rs').innerHTML='<span class="note">Presiona «Repetir 1000 veces» para ver cuánto varía la estimación entre muestras.</span>';
+  drawHist();one();
+}
+['h2','np','k','q'].forEach(i=>$(i).addEventListener('input',upd));
+$('b1').onclick=one;$('b2').onclick=many;
+addEventListener('resize',()=>{drawScatter();drawHist()});
+upd();
+</script>
+</body>
+</html>
