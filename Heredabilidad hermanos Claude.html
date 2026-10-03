@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Heredabilidad con familias de medios hermanos</title>
+<style>
+:root{--bg:#f3f6f7;--panel:#fff;--ink:#16202a;--mut:#5b6873;--line:#d3dbe0;--obs:#1b7f9e;--tru:#c2410c;--shade:#e9eef0}
+@media(prefers-color-scheme:dark){:root{--bg:#0e1418;--panel:#161e24;--ink:#e6edf1;--mut:#93a1ab;--line:#2b373f;--obs:#4fb8d6;--tru:#f08a4b;--shade:#1d2830}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:1080px;margin:0 auto;padding:20px 16px 40px}
+h1{font-size:1.6rem;margin:0 0 4px;font-weight:650}
+h2{font-size:1.05rem;margin:0 0 8px;font-weight:650}
+p{margin:0 0 8px;max-width:70ch}
+.sub{color:var(--mut);margin-bottom:16px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px 16px;margin-bottom:14px}
+.ctrl{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px 22px}
+label{display:block;font-weight:600;font-size:.92rem}
+label output{float:right;font-variant-numeric:tabular-nums;color:var(--obs)}
+input[type=range]{width:100%;accent-color:var(--obs)}
+.btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+button{font:inherit;font-weight:600;padding:8px 14px;border-radius:6px;border:1px solid var(--obs);background:var(--obs);color:#fff;cursor:pointer}
+button.alt{background:transparent;color:var(--obs)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--tru);outline-offset:2px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:820px){.grid{grid-template-columns:1fr}}
+canvas{width:100%;height:290px;display:block}
+table{border-collapse:collapse;width:100%;font-size:.9rem;font-variant-numeric:tabular-nums}
+th,td{padding:5px 8px;border-bottom:1px solid var(--line);text-align:right}
+th:first-child,td:first-child{text-align:left}
+.big{font-size:1.5rem;font-weight:700;font-variant-numeric:tabular-nums}
+.k{display:flex;flex-wrap:wrap;gap:6px 24px;margin-top:8px}
+.k div{min-width:140px}.k small{display:block;color:var(--mut)}
+.t{color:var(--tru)}.o{color:var(--obs)}
+.note{color:var(--mut);font-size:.9rem}
+.theory li{margin-bottom:4px}
+</style>
+</head>
+<body>
+<main>
+<h1>Estimar la heredabilidad con medios hermanos</h1>
+<p class="sub">Cada padre se aparea con muchas madres no emparentadas y deja un hijo con cada una. Los hijos de un mismo padre comparten ¼ de la varianza aditiva, y de ahí sale h².</p>
+
+<section class="panel" aria-label="Parámetros">
+<div class="ctrl">
+<label>h² verdadera <output id="oh">0.40</output><input id="h2" type="range" min="0" max="1" step="0.05" value="0.4"></label>
+<label>Número de padres (familias) <output id="os">20</output><input id="s" type="range" min="3" max="100" step="1" value="20"></label>
+<label>Hijos por padre <output id="ok">10</output><input id="k" type="range" min="2" max="50" step="1" value="10"></label>
+</div>
+<p class="note" style="margin-top:10px">Total de animales medidos: <b id="n">200</b>. Varianza fenotípica fija en 100 (media 100).</p>
+<div class="btns">
+<button id="b1">Nueva muestra</button>
+<button id="b2" class="alt">Repetir el experimento 1000 veces</button>
+</div>
+</section>
+
+<div class="grid">
+<section class="panel">
+<h2>Una muestra: fenotipos por familia</h2>
+<canvas id="c1" role="img" aria-label="Fenotipos de los hijos agrupados por padre"></canvas>
+<p class="note">Cada columna es un padre. Puntos: hijos. Barra: media de la familia. Línea punteada: media general. Si h² es alta, las medias de familia se separan más.</p>
+</section>
+<section class="panel">
+<h2>Análisis de varianza de la muestra</h2>
+<table>
+<thead><tr><th>Fuente</th><th>gl</th><th>SC</th><th>CM</th></tr></thead>
+<tbody>
+<tr><td>Entre padres</td><td id="dfb"></td><td id="ssb"></td><td id="msb"></td></tr>
+<tr><td>Dentro de padres</td><td id="dfw"></td><td id="ssw"></td><td id="msw"></td></tr>
+</tbody></table>
+<div class="k">
+<div><small>σ²<sub>padre</sub> = (CMe − CMd)/k</small><span id="vs" class="big"></span></div>
+<div><small>t = σ²<sub>p</sub>/(σ²<sub>p</sub>+σ²<sub>d</sub>)</small><span id="tt" class="big"></span></div>
+</div>
+<div class="k">
+<div><small>h² estimada = 4t</small><span id="hh" class="big o"></span></div>
+<div><small>Error estándar</small><span id="se" class="big"></span></div>
+<div><small>h² verdadera</small><span id="ht" class="big t"></span></div>
+</div>
+<p id="msg" class="note" style="margin-top:10px"></p>
+</section>
+</div>
+
+<section class="panel">
+<h2>Repeticiones: distribución de la h² estimada</h2>
+<canvas id="c2" role="img" aria-label="Histograma de estimaciones de heredabilidad"></canvas>
+<div class="k" id="rs"><span class="note">Presiona «Repetir el experimento 1000 veces» para ver cuánto varía la estimación de una muestra a otra.</span></div>
+</section>
+
+<section class="panel theory">
+<h2>Qué hay detrás</h2>
+<ul>
+<li>Medios hermanos comparten un padre: su covarianza es Cov(MH) = ¼ V<sub>A</sub>.</li>
+<li>Esa covarianza es la varianza entre padres, así que σ²<sub>padre</sub> = ¼ V<sub>A</sub>. La correlación intraclase es t = σ²<sub>p</sub>/V<sub>P</sub> = ¼ h².</li>
+<li>Por eso <b>h² = 4t</b>. El factor 4 también multiplica el error de la estimación.</li>
+<li>Con pocos padres la estimación varía mucho y puede salir negativa o mayor que 1. Aumentar padres reduce el error más que aumentar hijos por padre.</li>
+<li>Los medios hermanos de padre aíslan V<sub>A</sub> porque no comparten madre: se evita el efecto materno y la dominancia (en este modelo no hay ambiente común).</li>
+</ul>
+</section>
+</main>
+
+<script>
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+function randn(){let u=0;while(!u)u=Math.random();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*Math.random())}
+const par=()=>({h:+$('h2').value,s:+$('s').value,k:+$('k').value});
+
+function sim(h,s,k){
+  const VP=100,VA=h*VP,sdS=Math.sqrt(VA)/2,sdW=Math.sqrt(VP-VA/4);
+  return Array.from({length:s},()=>{const g=sdS*randn();return Array.from({length:k},()=>100+g+sdW*randn())});
+}
+function anova(f){
+  const s=f.length,k=f[0].length,m=f.map(a=>a.reduce((x,y)=>x+y)/k),g=m.reduce((x,y)=>x+y)/s;
+  let ssb=0,ssw=0;
+  f.forEach((a,i)=>{ssb+=k*(m[i]-g)**2;a.forEach(y=>ssw+=(y-m[i])**2)});
+  const dfb=s-1,dfw=s*(k-1),msb=ssb/dfb,msw=ssw/dfw,vs=(msb-msw)/k,t=vs/(vs+msw);
+  const se=4*Math.sqrt(2*(1-t)**2*(1+(k-1)*t)**2/(k*(k-1)*dfb));
+  return{m,g,ssb,ssw,dfb,dfw,msb,msw,vs,t,h:4*t,se};
+}
+function prep(c){
+  const r=window.devicePixelRatio||1,w=c.clientWidth,h=c.clientHeight;
+  c.width=w*r;c.height=h*r;const x=c.getContext('2d');x.setTransform(r,0,0,r,0,0);x.clearRect(0,0,w,h);
+  x.font='12px system-ui,sans-serif';return[x,w,h];
+}
+let cur=null,reps=null;
+
+function drawFam(){
+  if(!cur)return;
+  const[x,w,h]=prep($('c1')),P={l:42,r:8,t:10,b:24},s=cur.fam.length;
+  const all=cur.fam.flat();let lo=Math.min(...all),hi=Math.max(...all);const pd=(hi-lo)*.06;lo-=pd;hi+=pd;
+  const slot=(w-P.l-P.r)/s,X=i=>P.l+(i+.5)*slot,Y=v=>P.t+(hi-v)/(hi-lo)*(h-P.t-P.b);
+  x.strokeStyle=css('--line');x.fillStyle=css('--mut');x.lineWidth=1;
+  for(let i=0;i<=4;i++){const v=lo+(hi-lo)*i/4,y=Y(v);x.beginPath();x.moveTo(P.l,y);x.lineTo(w-P.r,y);x.stroke();x.textAlign='right';x.fillText(v.toFixed(0),P.l-6,y+4)}
+  x.textAlign='center';x.fillText('Padres',(P.l+w-P.r)/2,h-6);
+  x.setLineDash([5,4]);x.strokeStyle=css('--mut');x.beginPath();x.moveTo(P.l,Y(cur.a.g));x.lineTo(w-P.r,Y(cur.a.g));x.stroke();x.setLineDash([]);
+  const rad=Math.max(1.6,Math.min(3.5,slot/6));
+  cur.fam.forEach((a,i)=>{
+    x.fillStyle=css('--obs');x.globalAlpha=.55;
+    a.forEach((y,j)=>{x.beginPath();x.arc(X(i)+cur.jit[i][j]*slot*.34,Y(y),rad,0,6.283);x.fill()});
+    x.globalAlpha=1;x.strokeStyle=css('--tru');x.lineWidth=2.5;
+    x.beginPath();x.moveTo(X(i)-slot*.4,Y(cur.a.m[i]));x.lineTo(X(i)+slot*.4,Y(cur.a.m[i]));x.stroke();
+  });
+}
+function drawHist(){
+  const[x,w,h]=prep($('c2'));if(!reps)return;
+  const P={l:42,r:10,t:10,b:28},lo=-1,hi=3,nb=40,bw=(hi-lo)/nb,cnt=new Array(nb).fill(0);
+  reps.h.forEach(v=>{cnt[Math.max(0,Math.min(nb-1,Math.floor((v-lo)/bw)))]++});
+  const mx=Math.max(...cnt),X=v=>P.l+(v-lo)/(hi-lo)*(w-P.l-P.r),Y=c=>h-P.b-c/mx*(h-P.b-P.t);
+  x.fillStyle=css('--shade');
+  x.fillRect(X(lo),P.t,X(0)-X(lo),h-P.b-P.t);x.fillRect(X(1),P.t,X(hi)-X(1),h-P.b-P.t);
+  x.fillStyle=css('--obs');x.globalAlpha=.8;
+  cnt.forEach((c,i)=>x.fillRect(X(lo+i*bw)+1,Y(c),(w-P.l-P.r)/nb-2,h-P.b-Y(c)));x.globalAlpha=1;
+  x.strokeStyle=css('--mut');x.beginPath();x.moveTo(P.l,h-P.b);x.lineTo(w-P.r,h-P.b);x.stroke();
+  x.fillStyle=css('--mut');x.textAlign='center';
+  for(let v=lo;v<=hi;v+=.5)x.fillText(v.toFixed(1),X(v),h-12);
+  x.fillText('h² estimada (zona sombreada: fuera de 0–1)',(P.l+w-P.r)/2,h-1);
+  x.textAlign='right';x.fillText(mx,P.l-6,P.t+8);x.fillText(0,P.l-6,h-P.b);
+  x.lineWidth=2.5;x.strokeStyle=css('--tru');x.beginPath();x.moveTo(X(reps.p.h),P.t);x.lineTo(X(reps.p.h),h-P.b);x.stroke();
+  x.setLineDash([6,4]);x.strokeStyle=css('--obs');x.beginPath();x.moveTo(X(reps.mean),P.t);x.lineTo(X(reps.mean),h-P.b);x.stroke();x.setLineDash([]);
+}
+function one(){
+  const p=par(),fam=sim(p.h,p.s,p.k),jit=fam.map(a=>a.map(()=>Math.random()*2-1)),a=anova(fam);
+  cur={fam,jit,a,p};
+  const f=(v,d=2)=>v.toFixed(d);
+  $('dfb').textContent=a.dfb;$('dfw').textContent=a.dfw;
+  $('ssb').textContent=f(a.ssb,1);$('ssw').textContent=f(a.ssw,1);
+  $('msb').textContent=f(a.msb,2);$('msw').textContent=f(a.msw,2);
+  $('vs').textContent=f(a.vs);$('tt').textContent=f(a.t,3);
+  $('hh').textContent=f(a.h);$('se').textContent='± '+f(a.se);$('ht').textContent=f(p.h);
+  $('msg').textContent=a.h<0?'La estimación salió negativa: CM entre padres < CM dentro. Pasa con pocas familias; la h² real no puede ser negativa.':
+    a.h>1?'La estimación superó 1: es solo error de muestreo, ya que h² real está entre 0 y 1.':
+    Math.abs(a.h-p.h)<=a.se?'La estimación cae dentro de ± 1 error estándar de la h² verdadera.':'La estimación está a más de 1 error estándar de la verdadera. Ocurre en cerca de un tercio de las muestras.';
+  drawFam();
+}
+function many(){
+  const p=par(),hs=[],ses=[];
+  for(let i=0;i<1000;i++){const a=anova(sim(p.h,p.s,p.k));hs.push(a.h);ses.push(a.se)}
+  const mean=hs.reduce((x,y)=>x+y)/hs.length,sd=Math.sqrt(hs.reduce((x,y)=>x+(y-mean)**2,0)/(hs.length-1));
+  const out=hs.filter(v=>v<0||v>1).length/10;
+  reps={h:hs,mean,p};
+  $('rs').innerHTML=`<div><small>Media de las estimaciones</small><span class="big o">${mean.toFixed(2)}</span></div>
+  <div><small>h² verdadera</small><span class="big t">${p.h.toFixed(2)}</span></div>
+  <div><small>Desv. estándar observada</small><span class="big">${sd.toFixed(2)}</span></div>
+  <div><small>Fuera de 0–1</small><span class="big">${out.toFixed(1)} %</span></div>
+  <p class="note" style="width:100%;margin:6px 0 0">El estimador es insesgado (la media coincide con h²), pero cada muestra individual puede estar lejos. Línea naranja: valor verdadero. Línea punteada: media de las estimaciones.</p>`;
+  drawHist();
+}
+function upd(){
+  const p=par();$('oh').textContent=p.h.toFixed(2);$('os').textContent=p.s;$('ok').textContent=p.k;$('n').textContent=p.s*p.k;
+  reps=null;$('rs').innerHTML='<span class="note">Presiona «Repetir el experimento 1000 veces» para ver cuánto varía la estimación de una muestra a otra.</span>';
+  drawHist();one();
+}
+['h2','s','k'].forEach(i=>$(i).addEventListener('input',upd));
+$('b1').onclick=one;$('b2').onclick=many;
+addEventListener('resize',()=>{drawFam();drawHist()});
+upd();
+</script>
+</body>
+</html>
