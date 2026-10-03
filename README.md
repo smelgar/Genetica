@@ -14,3 +14,6 @@
 
 -[Simulador de heredabilidad con medios hermanos](https://smelgar.github.io/Genetica/Heredabilidad%20hermanos%20Claude.html)
 
+-[Simulador de heredabilidad con análisis de hermanos](https://smelgar.github.io/Genetica/heredabilidad_diseno_anidado%20Claude.html)
+
+
