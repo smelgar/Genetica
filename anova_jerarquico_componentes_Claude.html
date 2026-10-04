@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ANOVA jerárquico y componentes de varianza</title>
+<style>
+:root{--bg:#f3f6f7;--panel:#fff;--ink:#16202a;--mut:#5b6873;--line:#d3dbe0;--s:#1b7f9e;--d:#7c3aed;--w:#2f855a;--tru:#c2410c;--shade:#e9eef0;--hl:#e3f1f6}
+@media(prefers-color-scheme:dark){:root{--bg:#0e1418;--panel:#161e24;--ink:#e6edf1;--mut:#93a1ab;--line:#2b373f;--s:#4fb8d6;--d:#b79cff;--w:#68d391;--tru:#f08a4b;--shade:#1d2830;--hl:#1b3340}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:1120px;margin:0 auto;padding:20px 16px 40px}
+h1{font-size:1.6rem;margin:0 0 4px;font-weight:650}
+h2{font-size:1.05rem;margin:0 0 8px;font-weight:650}
+p{margin:0 0 8px;max-width:76ch}
+.sub{color:var(--mut);margin-bottom:16px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px 16px;margin-bottom:14px}
+.ctrl{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px 22px}
+label{display:block;font-weight:600;font-size:.92rem}
+label output{float:right;font-variant-numeric:tabular-nums;color:var(--s)}
+input[type=range]{width:100%;accent-color:var(--s)}
+.btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px;align-items:center}
+button{font:inherit;font-weight:600;padding:8px 14px;border-radius:6px;border:1px solid var(--s);background:var(--s);color:#fff;cursor:pointer}
+button.alt{background:transparent;color:var(--s)}
+button.on{background:var(--ink);border-color:var(--ink);color:var(--panel)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--tru);outline-offset:2px}
+.grid{display:grid;grid-template-columns:1.1fr 1fr;gap:14px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media(max-width:900px){.grid,.g3{grid-template-columns:1fr}}
+canvas{width:100%;height:300px;display:block}
+.g3 canvas{height:200px}
+table{border-collapse:collapse;width:100%;font-size:.86rem;font-variant-numeric:tabular-nums}
+th,td{padding:5px 7px;border-bottom:1px solid var(--line);text-align:right;vertical-align:top}
+th:first-child,td:first-child{text-align:left}
+tr.hl td{background:var(--hl)}
+tr.row{cursor:pointer}
+.cs{color:var(--s)}.cd{color:var(--d)}.cw{color:var(--w)}.ct{color:var(--tru)}
+.note{color:var(--mut);font-size:.9rem}
+.sw{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px}
+.bar{display:flex;height:22px;border-radius:4px;overflow:hidden;margin:4px 0 8px;background:var(--shade)}
+.bar div{height:100%;color:#fff;font-size:.75rem;line-height:22px;text-align:center;overflow:hidden;white-space:nowrap}
+.eq{background:var(--shade);border-radius:6px;padding:8px 12px;margin:6px 0;font-size:.92rem}
+.theory li{margin-bottom:5px}
+</style>
+</head>
+<body>
+<main>
+<h1>ANOVA jerárquico y componentes de varianza</h1>
+<p class="sub">En un diseño de padres, madres dentro de padres y progenie, los cuadrados medios son mezclas de varianzas. Aquí se genera un experimento con componentes conocidos, se calcula el ANOVA y se despejan los componentes para compararlos con los verdaderos.</p>
+
+<section class="panel" aria-label="Parámetros">
+<div class="ctrl">
+<label>σ²<sub>s</sub> entre padres <output id="ovs">10</output><input id="vs" type="range" min="0" max="40" step="1" value="10"></label>
+<label>σ²<sub>d</sub> madres dentro de padres <output id="ovd">15</output><input id="vd" type="range" min="0" max="40" step="1" value="15"></label>
+<label>σ²<sub>w</sub> dentro de madres <output id="ovw">50</output><input id="vw" type="range" min="5" max="100" step="1" value="50"></label>
+</div>
+<div class="ctrl" style="margin-top:14px">
+<label>Padres (s) <output id="os">20</output><input id="s" type="range" min="3" max="60" step="1" value="20"></label>
+<label>Madres por padre (d) <output id="od">3</output><input id="d" type="range" min="2" max="8" step="1" value="3"></label>
+<label>Hijos por madre (n) <output id="on">5</output><input id="n" type="range" min="2" max="15" step="1" value="5"></label>
+</div>
+<p class="note" style="margin-top:10px">Modelo: y<sub>ijk</sub> = 100 + padre<sub>i</sub> + madre<sub>j(i)</sub> + error<sub>ijk</sub>. Total de animales: <b id="tot"></b>.</p>
+<div class="btns"><button id="b1">Nueva muestra</button><button id="b2" class="alt">Repetir 1000 veces</button></div>
+</section>
+
+<div class="grid">
+<section class="panel">
+<h2>1. Descomponer las desviaciones</h2>
+<div class="btns" style="margin:0 0 8px" role="group" aria-label="Nivel a resaltar">
+<button class="alt" data-m="1">Entre padres</button>
+<button class="alt" data-m="2">Madres en padres</button>
+<button class="alt" data-m="3">Hijos en madres</button>
+</div>
+<canvas id="c1" role="img" aria-label="Datos jerárquicos con las desviaciones del nivel seleccionado"></canvas>
+<p class="note"><span class="sw" style="background:var(--s)"></span>Media de padre &nbsp; <span class="sw" style="background:var(--d)"></span>Media de madre &nbsp; <span class="sw" style="background:var(--w)"></span>Hijos. Los segmentos de color muestran las desviaciones del nivel elegido. Línea punteada: media general.</p>
+<p id="exp" style="margin-top:6px"></p>
+<div class="eq">y − ȳ = (ȳ<sub>i</sub> − ȳ) + (ȳ<sub>ij</sub> − ȳ<sub>i</sub>) + (y<sub>ijk</sub> − ȳ<sub>ij</sub>)</div>
+</section>
+
+<section class="panel">
+<h2>2. Tabla de ANOVA</h2>
+<table id="tb"></table>
+<p class="note" style="margin-top:8px">CM = SC / gl. Haz clic en una fila para resaltar su nivel en el gráfico. «CM esperado» es lo que tendría el CM en promedio con tus parámetros verdaderos.</p>
+<h2 style="margin-top:14px">¿Por qué esos coeficientes?</h2>
+<p class="note">Cada media de madre promedia n hijos, así que lleva ruido σ²<sub>w</sub>/n. Cada media de padre promedia d madres, y arrastra σ²<sub>d</sub>/d y σ²<sub>w</sub>/(dn):</p>
+<div class="eq">Var(ȳ<sub>i</sub>) = σ²<sub>s</sub> + σ²<sub>d</sub>/d + σ²<sub>w</sub>/(dn)<br>CM<sub>padres</sub> = dn · Var(ȳ<sub>i</sub>) = σ²<sub>w</sub> + nσ²<sub>d</sub> + dnσ²<sub>s</sub></div>
+</section>
+</div>
+
+<section class="panel">
+<h2>3. Despejar los componentes de varianza</h2>
+<table id="tc"></table>
+<p class="note" style="margin-top:8px">Partición de la varianza total (valores negativos se muestran como 0):</p>
+<div class="note">Estimada</div><div class="bar" id="be"></div>
+<div class="note">Verdadera</div><div class="bar" id="bt"></div>
+<p id="neg" class="note"></p>
+</section>
+
+<section class="panel">
+<h2>4. Repetir el experimento: ¿los CM y los componentes son insesgados?</h2>
+<div class="g3">
+<div><canvas id="c3" role="img" aria-label="Histograma de σ²s estimado"></canvas><p class="note cs" style="text-align:center">σ̂²<sub>s</sub> (padres)</p></div>
+<div><canvas id="c4" role="img" aria-label="Histograma de σ²d estimado"></canvas><p class="note cd" style="text-align:center">σ̂²<sub>d</sub> (madres)</p></div>
+<div><canvas id="c5" role="img" aria-label="Histograma de σ²w estimado"></canvas><p class="note cw" style="text-align:center">σ̂²<sub>w</sub> (dentro)</p></div>
+</div>
+<table id="tr" style="margin-top:10px"><tbody><tr><td class="note">Presiona «Repetir 1000 veces».</td></tr></tbody></table>
+</section>
+
+<section class="panel theory">
+<h2>Ideas clave</h2>
+<ul>
+<li>El CM de cada nivel mezcla varianzas de ese nivel y de los inferiores. Solo el último, CM<sub>dentro</sub>, estima un componente directamente.</li>
+<li>Se despeja de abajo hacia arriba: σ̂²<sub>w</sub> = CM<sub>3</sub>; σ̂²<sub>d</sub> = (CM<sub>2</sub> − CM<sub>3</sub>)/n; σ̂²<sub>s</sub> = (CM<sub>1</sub> − CM<sub>2</sub>)/(dn).</li>
+<li>Cada CM es insesgado para su esperanza, y los componentes son insesgados porque son combinaciones lineales de CM. Pero una diferencia de CM puede salir negativa en una muestra concreta.</li>
+<li>La estimación de σ²<sub>s</sub> es la más variable, porque descansa en pocos grados de libertad (s − 1). Más padres la mejoran más que más hijos por madre.</li>
+<li>En el análisis de hermanos, 4σ²<sub>s</sub> estima V<sub>A</sub> y la heredabilidad es 4σ̂²<sub>s</sub>/(σ̂²<sub>s</sub> + σ̂²<sub>d</sub> + σ̂²<sub>w</sub>).</li>
+</ul>
+</section>
+</main>
+
+<script>
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+function randn(){let u=0;while(!u)u=Math.random();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*Math.random())}
+const mean=a=>a.reduce((x,y)=>x+y,0)/a.length;
+const par=()=>({vs:+$('vs').value,vd:+$('vd').value,vw:+$('vw').value,s:+$('s').value,d:+$('d').value,n:+$('n').value});
+const f1=v=>v.toFixed(1),f2=v=>v.toFixed(2);
+const EXPL={1:'<b class="cs">Entre padres:</b> distancia de cada media de padre a la media general. Estas desviaciones contienen σ²<sub>s</sub>, pero también el ruido de las madres y de los hijos que forman cada media.',
+2:'<b class="cd">Madres dentro de padres:</b> distancia de la media de cada madre a la media de su padre. Contienen σ²<sub>d</sub> más el ruido de sus hijos, pero ya no contienen σ²<sub>s</sub>.',
+3:'<b class="cw">Hijos dentro de madres:</b> distancia de cada hijo a la media de su madre. Solo contienen σ²<sub>w</sub>, así que CM<sub>dentro</sub> lo estima directamente.'};
+let cur=null,mode=1,reps=null;
+
+function sim(p){
+  const a=Math.sqrt(p.vs),b=Math.sqrt(p.vd),e=Math.sqrt(p.vw);
+  return Array.from({length:p.s},()=>{const A=a*randn();
+    return Array.from({length:p.d},()=>{const B=b*randn();
+      return Array.from({length:p.n},()=>100+A+B+e*randn())})});
+}
+function anova(f){
+  const s=f.length,d=f[0].length,n=f[0][0].length;
+  const md=f.map(S=>S.map(mean)),sm=md.map(mean),g=mean(sm);
+  let a=0,b=0,c=0;
+  f.forEach((S,i)=>{a+=d*n*(sm[i]-g)**2;S.forEach((D,j)=>{b+=n*(md[i][j]-sm[i])**2;D.forEach(y=>c+=(y-md[i][j])**2)})});
+  const gl=[s-1,s*(d-1),s*d*(n-1)],ss=[a,b,c],cm=ss.map((v,i)=>v/gl[i]);
+  const vw=cm[2],vd=(cm[1]-cm[2])/n,vs=(cm[0]-cm[1])/(d*n);
+  return{gl,ss,cm,vs,vd,vw,md,sm,g,s,d,n};
+}
+function prep(c){
+  const r=window.devicePixelRatio||1,w=c.clientWidth,h=c.clientHeight;
+  c.width=w*r;c.height=h*r;const x=c.getContext('2d');x.setTransform(r,0,0,r,0,0);x.clearRect(0,0,w,h);
+  x.font='12px system-ui,sans-serif';return[x,w,h];
+}
+function drawNest(){
+  if(!cur)return;
+  const[x,w,h]=prep($('c1')),P={l:40,r:8,t:10,b:22},f=cur.f,a=cur.a,s=a.s,d=a.d;
+  const all=f.flat(2);let lo=Math.min(...all),hi=Math.max(...all);const pd=(hi-lo)*.05;lo-=pd;hi+=pd;
+  const slot=(w-P.l-P.r)/s,X=i=>P.l+i*slot,Y=v=>P.t+(hi-v)/(hi-lo)*(h-P.t-P.b),dw=slot*.84/d,r=Math.max(1.2,Math.min(2.6,dw/3));
+  x.strokeStyle=css('--line');x.fillStyle=css('--mut');x.lineWidth=1;x.textAlign='right';
+  for(let i=0;i<=4;i++){const v=lo+(hi-lo)*i/4;x.beginPath();x.moveTo(P.l,Y(v));x.lineTo(w-P.r,Y(v));x.stroke();x.fillText(v.toFixed(0),P.l-6,Y(v)+4)}
+  x.textAlign='center';x.fillText('Padres',(P.l+w-P.r)/2,h-5);
+  const cx=(i,j)=>X(i)+slot*.08+dw*(j+.5);
+  f.forEach((S,i)=>S.forEach((D,j)=>{
+    x.fillStyle=css('--w');x.globalAlpha=mode===3?.8:.3;
+    D.forEach((y,k)=>{x.beginPath();x.arc(cx(i,j)+cur.j[i][j][k]*dw*.3,Y(y),r,0,6.283);x.fill()});
+    x.globalAlpha=1;
+  }));
+  const seg=(x1,y1,y2,c)=>{x.strokeStyle=css(c);x.lineWidth=2;x.beginPath();x.moveTo(x1,Y(y1));x.lineTo(x1,Y(y2));x.stroke()};
+  f.forEach((S,i)=>S.forEach((D,j)=>{
+    if(mode===3)D.forEach((y,k)=>{x.globalAlpha=.7;seg(cx(i,j)+cur.j[i][j][k]*dw*.3,a.md[i][j],y,'--w');x.globalAlpha=1});
+    if(mode===2)seg(cx(i,j),a.sm[i],a.md[i][j],'--d');
+  }));
+  if(mode===1)f.forEach((S,i)=>seg(X(i)+slot/2,a.g,a.sm[i],'--s'));
+  f.forEach((S,i)=>{
+    S.forEach((D,j)=>{x.strokeStyle=css('--d');x.lineWidth=mode===2?3:1.5;x.globalAlpha=mode===2?1:.6;x.beginPath();x.moveTo(cx(i,j)-dw*.4,Y(a.md[i][j]));x.lineTo(cx(i,j)+dw*.4,Y(a.md[i][j]));x.stroke();x.globalAlpha=1});
+    x.strokeStyle=css('--s');x.lineWidth=mode===1?4:2;x.globalAlpha=mode===1?1:.6;x.beginPath();x.moveTo(X(i)+slot*.04,Y(a.sm[i]));x.lineTo(X(i)+slot*.96,Y(a.sm[i]));x.stroke();x.globalAlpha=1;
+  });
+  x.setLineDash([5,4]);x.strokeStyle=css('--ink');x.lineWidth=1.2;x.beginPath();x.moveTo(P.l,Y(a.g));x.lineTo(w-P.r,Y(a.g));x.stroke();x.setLineDash([]);
+}
+function tables(){
+  const a=cur.a,p=cur.p,{s,d,n}=a,names=['Entre padres','Madres en padres','Hijos en madres'],cls=['cs','cd','cw'];
+  const efm=['σ²<sub>w</sub> + nσ²<sub>d</sub> + dnσ²<sub>s</sub>','σ²<sub>w</sub> + nσ²<sub>d</sub>','σ²<sub>w</sub>'];
+  const ev=[p.vw+n*p.vd+d*n*p.vs,p.vw+n*p.vd,p.vw];
+  const gls=['s − 1','s(d − 1)','sd(n − 1)'];
+  let t='<thead><tr><th>Fuente</th><th>gl</th><th>SC</th><th>CM obs.</th><th>CM esperado (fórmula)</th><th>CM esperado (tus valores)</th></tr></thead><tbody>';
+  names.forEach((nm,i)=>{t+=`<tr class="row${mode===i+1?' hl':''}" data-m="${i+1}"><td class="${cls[i]}"><b>${nm}</b></td><td>${a.gl[i]}<br><span class="note">${gls[i]}</span></td><td>${f1(a.ss[i])}</td><td><b>${f1(a.cm[i])}</b></td><td style="text-align:left">${efm[i]}</td><td>${f1(ev[i])}</td></tr>`});
+  $('tb').innerHTML=t+'</tbody>';
+  const est=[a.vs,a.vd,a.vw],tru=[p.vs,p.vd,p.vw];
+  const form=['(CM<sub>1</sub> − CM<sub>2</sub>) / dn','(CM<sub>2</sub> − CM<sub>3</sub>) / n','CM<sub>3</sub>'];
+  const num=[`(${f1(a.cm[0])} − ${f1(a.cm[1])}) / ${d*n}`,`(${f1(a.cm[1])} − ${f1(a.cm[2])}) / ${n}`,f1(a.cm[2])];
+  const T=est.reduce((x,y)=>x+y,0),TT=tru.reduce((x,y)=>x+y,0);
+  let c='<thead><tr><th>Componente</th><th>Fórmula</th><th>Con los números</th><th>Estimado</th><th>Verdadero</th><th>% est.</th><th>% verd.</th></tr></thead><tbody>';
+  ['σ²<sub>s</sub> (padres)','σ²<sub>d</sub> (madres)','σ²<sub>w</sub> (dentro)'].forEach((nm,i)=>{
+    c+=`<tr><td class="${cls[i]}"><b>${nm}</b></td><td>${form[i]}</td><td>${num[i]}</td><td><b>${f2(est[i])}</b></td><td>${f2(tru[i])}</td><td>${(100*est[i]/T).toFixed(0)} %</td><td>${(100*tru[i]/TT).toFixed(0)} %</td></tr>`});
+  $('tc').innerHTML=c+'</tbody>';
+  const bar=(v,id)=>{const q=v.map(z=>Math.max(0,z)),S=q.reduce((x,y)=>x+y,0)||1;
+    $(id).innerHTML=q.map((z,i)=>`<div style="width:${100*z/S}%;background:var(${['--s','--d','--w'][i]})">${z/S>.1?(100*z/S).toFixed(0)+' %':''}</div>`).join('')};
+  bar(est,'be');bar(tru,'bt');
+  $('neg').textContent=(est[0]<0||est[1]<0)?'Una estimación salió negativa: el CM del nivel superior fue menor que el del inferior. Es posible con pocos datos, aunque un componente de varianza real no puede ser negativo.':'';
+  document.querySelectorAll('#tb tr.row').forEach(r=>r.onclick=()=>setMode(+r.dataset.m));
+}
+function setMode(m){
+  mode=m;$('exp').innerHTML=EXPL[m];
+  document.querySelectorAll('button[data-m]').forEach(b=>b.classList.toggle('on',+b.dataset.m===m));
+  if(cur){drawNest();tables()}
+}
+function one(){
+  const p=par(),f=sim(p),a=anova(f),j=f.map(S=>S.map(D=>D.map(()=>Math.random()*2-1)));
+  cur={p,f,a,j};drawNest();tables();
+}
+function hist(id,arr,tv,color){
+  const[x,w,h]=prep($(id)),P={l:8,r:8,t:8,b:22},q=[...arr].sort((u,v)=>u-v);
+  let lo=Math.min(q[Math.floor(.005*q.length)],tv),hi=Math.max(q[Math.floor(.995*q.length)],tv);
+  const pd=(hi-lo)*.05;lo-=pd;hi+=pd;const nb=30,bw=(hi-lo)/nb,c=new Array(nb).fill(0);
+  arr.forEach(v=>{const i=Math.floor((v-lo)/bw);if(i>=0&&i<nb)c[i]++});
+  const mx=Math.max(...c),X=v=>P.l+(v-lo)/(hi-lo)*(w-P.l-P.r),Wd=(w-P.l-P.r)/nb;
+  if(lo<0){x.fillStyle=css('--shade');x.fillRect(X(lo),P.t,X(0)-X(lo),h-P.t-P.b)}
+  x.fillStyle=css(color);x.globalAlpha=.75;
+  c.forEach((v,i)=>{const bh=v/mx*(h-P.t-P.b);x.fillRect(P.l+i*Wd+1,h-P.b-bh,Wd-2,bh)});x.globalAlpha=1;
+  x.strokeStyle=css('--mut');x.lineWidth=1;x.beginPath();x.moveTo(P.l,h-P.b);x.lineTo(w-P.r,h-P.b);x.stroke();
+  x.fillStyle=css('--mut');x.textAlign='center';
+  for(let i=0;i<=3;i++){const v=lo+(hi-lo)*i/3;x.fillText(v.toFixed(0),X(v),h-7)}
+  x.strokeStyle=css('--tru');x.lineWidth=2.5;x.beginPath();x.moveTo(X(tv),P.t);x.lineTo(X(tv),h-P.b);x.stroke();
+  const m=mean(arr);x.setLineDash([5,4]);x.strokeStyle=css('--ink');x.lineWidth=1.5;x.beginPath();x.moveTo(X(m),P.t);x.lineTo(X(m),h-P.b);x.stroke();x.setLineDash([]);
+}
+function many(){
+  const p=par(),R={cm:[[],[],[]],v:[[],[],[]],p};
+  for(let i=0;i<1000;i++){const a=anova(sim(p));a.cm.forEach((v,k)=>R.cm[k].push(v));[a.vs,a.vd,a.vw].forEach((v,k)=>R.v[k].push(v))}
+  reps=R;const{d,n}=p;
+  const ev=[p.vw+n*p.vd+d*n*p.vs,p.vw+n*p.vd,p.vw],tru=[p.vs,p.vd,p.vw];
+  const sd=a=>{const m=mean(a);return Math.sqrt(a.reduce((x,y)=>x+(y-m)**2,0)/(a.length-1))};
+  const row=(nm,c,e,a,neg)=>`<tr><td class="${c}"><b>${nm}</b></td><td>${f2(e)}</td><td>${f2(mean(a))}</td><td>${f2(sd(a))}</td><td>${neg===null?'—':(100*a.filter(v=>v<0).length/a.length).toFixed(1)+' %'}</td></tr>`;
+  $('tr').innerHTML='<thead><tr><th>Cantidad</th><th>Valor esperado / verdadero</th><th>Media de 1000</th><th>Desv. estándar</th><th>Estimaciones negativas</th></tr></thead><tbody>'+
+    row('CM padres','cs',ev[0],R.cm[0],null)+row('CM madres','cd',ev[1],R.cm[1],null)+row('CM dentro','cw',ev[2],R.cm[2],null)+
+    row('σ̂²<sub>s</sub>','cs',tru[0],R.v[0],1)+row('σ̂²<sub>d</sub>','cd',tru[1],R.v[1],1)+row('σ̂²<sub>w</sub>','cw',tru[2],R.v[2],1)+'</tbody>';
+  hist('c3',R.v[0],p.vs,'--s');hist('c4',R.v[1],p.vd,'--d');hist('c5',R.v[2],p.vw,'--w');
+}
+function upd(){
+  const p=par();
+  [['vs','ovs'],['vd','ovd'],['vw','ovw'],['s','os'],['d','od'],['n','on']].forEach(([a,b])=>$(b).textContent=p[a]);
+  $('tot').textContent=p.s*p.d*p.n;
+  reps=null;$('tr').innerHTML='<tbody><tr><td class="note">Presiona «Repetir 1000 veces».</td></tr></tbody>';
+  ['c3','c4','c5'].forEach(i=>prep($(i)));one();
+}
+['vs','vd','vw','s','d','n'].forEach(i=>$(i).addEventListener('input',upd));
+document.querySelectorAll('button[data-m]').forEach(b=>b.onclick=()=>setMode(+b.dataset.m));
+$('b1').onclick=one;$('b2').onclick=many;
+addEventListener('resize',()=>{drawNest();if(reps){const R=reps;hist('c3',R.v[0],R.p.vs,'--s');hist('c4',R.v[1],R.p.vd,'--d');hist('c5',R.v[2],R.p.vw,'--w')}});
+upd();setMode(1);
+</script>
+</body>
+</html>

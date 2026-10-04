@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Teorema del límite central</title>
+<style>
+:root{--bg:#f3f6f7;--panel:#fff;--ink:#16202a;--mut:#5b6873;--line:#d3dbe0;--obs:#1b7f9e;--tru:#c2410c;--pop:#7c8a94}
+@media(prefers-color-scheme:dark){:root{--bg:#0e1418;--panel:#161e24;--ink:#e6edf1;--mut:#93a1ab;--line:#2b373f;--obs:#4fb8d6;--tru:#f08a4b;--pop:#7f8f9a}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:1080px;margin:0 auto;padding:20px 16px 40px}
+h1{font-size:1.6rem;margin:0 0 4px;font-weight:650}
+h2{font-size:1.05rem;margin:0 0 8px;font-weight:650}
+p{margin:0 0 8px;max-width:72ch}
+.sub{color:var(--mut);margin-bottom:16px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px 16px;margin-bottom:14px}
+.ctrl{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px 22px;align-items:end}
+label{display:block;font-weight:600;font-size:.92rem}
+label output{float:right;font-variant-numeric:tabular-nums;color:var(--obs)}
+select{width:100%;font:inherit;padding:7px 8px;margin-top:4px;border-radius:6px;border:1px solid var(--line);background:var(--panel);color:var(--ink)}
+input[type=range]{width:100%;accent-color:var(--obs)}
+.btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+button{font:inherit;font-weight:600;padding:8px 14px;border-radius:6px;border:1px solid var(--obs);background:var(--obs);color:#fff;cursor:pointer}
+button.alt{background:transparent;color:var(--obs)}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--tru);outline-offset:2px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:820px){.grid{grid-template-columns:1fr}}
+canvas{width:100%;height:290px;display:block}
+.big{font-size:1.4rem;font-weight:700;font-variant-numeric:tabular-nums}
+.k{display:flex;flex-wrap:wrap;gap:8px 26px}
+.k div{min-width:150px}.k small{display:block;color:var(--mut)}
+.note{color:var(--mut);font-size:.9rem}
+.sw{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px}
+.theory li{margin-bottom:4px}
+.warn{color:var(--tru);font-weight:600}
+</style>
+</head>
+<body>
+<main>
+<h1>Teorema del límite central</h1>
+<p class="sub">Sea cual sea la forma de la población, las medias de muestras de tamaño n se acercan a una distribución normal al crecer n. Elige una población, un tamaño de muestra y observa cómo se forma la campana.</p>
+
+<section class="panel" aria-label="Parámetros">
+<div class="ctrl">
+<label for="dist">Población
+<select id="dist"></select></label>
+<label>Tamaño de la muestra (n) <output id="on">5</output><input id="n" type="range" min="1" max="100" step="1" value="5"></label>
+</div>
+<div class="btns">
+<button id="b1">+1 muestra</button>
+<button id="b100" class="alt">+100 muestras</button>
+<button id="b1000" class="alt">+1000 muestras</button>
+<button id="br" class="alt">Reiniciar</button>
+</div>
+</section>
+
+<div class="grid">
+<section class="panel">
+<h2>Población</h2>
+<canvas id="c1" role="img" aria-label="Distribución de la población"></canvas>
+<p class="note">Barras: forma de la población. Corchete: ± σ. Marcas en la base: los n valores de la última muestra. Línea punteada: media poblacional.</p>
+</section>
+<section class="panel">
+<h2>Distribución de las medias muestrales</h2>
+<canvas id="c2" role="img" aria-label="Histograma de las medias muestrales con curva normal"></canvas>
+<p class="note"><span class="sw" style="background:var(--obs)"></span>Medias observadas &nbsp; <span class="sw" style="background:var(--tru)"></span>Normal teórica N(μ, σ/√n). Línea oscura: media de la última muestra. Corchete: ± σ/√n.<br>El eje horizontal es el mismo que el de la población y no cambia con n. El eje vertical es densidad (el área total es 1): al estrecharse, la distribución se vuelve más alta.</p>
+</section>
+</div>
+
+<section class="panel">
+<h2>Resumen</h2>
+<div class="k">
+<div><small>Muestras tomadas</small><span id="cnt" class="big">0</span></div>
+<div><small>Media de las medias<br>(esperado: μ = <span id="mu"></span>)</small><span id="mm" class="big"></span></div>
+<div><small>Desv. estándar de las medias<br>(esperado: σ/√n = <span id="se"></span>)</small><span id="sm" class="big"></span></div>
+<div><small>Asimetría de las medias<br>(población: <span id="sk"></span>; esperado: <span id="skm"></span>)</small><span id="ss" class="big"></span></div>
+</div>
+<p id="msg" class="note" style="margin-top:10px"></p>
+</section>
+
+<section class="panel theory">
+<h2>Qué observar</h2>
+<ul>
+<li>Con n = 1 el histograma de medias es la población misma y tiene su mismo ancho. Al subir n, la distribución se estrecha alrededor de μ y toma forma de campana. Compara el corchete ± σ/√n con el ± σ de la población.</li>
+<li>La media de las medias coincide con μ para cualquier n. Lo que cambia es la dispersión: σ/√n. Para reducir el error a la mitad se necesita cuatro veces más datos.</li>
+<li>Cuanto más asimétrica es la población (exponencial, log-normal), más grande debe ser n. La asimetría de las medias baja como γ/√n.</li>
+<li>Con poblaciones discretas (dado, Bernoulli) la campana aparece igual, aunque cada observación solo tome pocos valores.</li>
+<li>La Cauchy es el contraejemplo: no tiene media ni varianza finitas, y el promedio de n valores sigue siendo Cauchy. El teorema exige varianza finita.</li>
+</ul>
+</section>
+</main>
+
+<script>
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+function randn(){let u=0;while(!u)u=Math.random();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*Math.random())}
+const D={
+  unif:{n:'Uniforme (0, 1)',f:()=>Math.random()},
+  exp:{n:'Exponencial (asimétrica)',f:()=>-Math.log(1-Math.random())},
+  bim:{n:'Bimodal (dos picos)',f:()=>(Math.random()<.5?-1.5:1.5)+.5*randn()},
+  logn:{n:'Log-normal (muy asimétrica)',f:()=>Math.exp(.9*randn())},
+  dado:{n:'Dado (discreta, 1 a 6)',f:()=>1+Math.floor(6*Math.random())},
+  bern:{n:'Bernoulli p = 0.2 (solo 0 y 1)',f:()=>Math.random()<.2?1:0},
+  cau:{n:'Cauchy (no cumple el teorema)',f:()=>Math.tan(Math.PI*(Math.random()-.5)),bad:true}
+};
+Object.keys(D).forEach(k=>{const o=document.createElement('option');o.value=k;o.textContent=D[k].n;$('dist').appendChild(o)});
+const fmt=(v,r)=>v.toFixed(r<2?2:r<20?1:0);
+let S={key:'unif',n:5,means:[],last:null,pool:null,pop:null};
+
+function setPop(){
+  const d=D[S.key],N=150000,pool=new Float64Array(N);
+  for(let i=0;i<N;i++)pool[i]=d.f();
+  let lo,hi,mu=NaN,sd=NaN,sk=NaN;
+  if(d.bad){lo=-10;hi=10}
+  else{
+    mu=0;for(const v of pool)mu+=v;mu/=N;
+    let m2=0,m3=0;for(const v of pool){const e=v-mu;m2+=e*e;m3+=e*e*e}
+    sd=Math.sqrt(m2/N);sk=m3/N/sd**3;
+    const s=Float64Array.from(pool).sort();lo=s[Math.floor(.001*N)];hi=s[Math.floor(.999*N)];
+    if(hi-lo<1e-9){lo-=.5;hi+=.5}
+  }
+  const nb=40,bw=(hi-lo)/nb,c=new Array(nb).fill(0);
+  for(const v of pool){const i=Math.floor((v-lo)/bw);if(i>=0&&i<nb)c[i]++}
+  S.pop={lo,hi,nb,dens:c.map(v=>v/N/bw),mu,sd,sk,bad:!!d.bad};
+}
+function take(k){
+  const f=D[S.key].f,n=S.n;
+  for(let j=0;j<k;j++){
+    let s=0,vals=(k===1)?[]:null;
+    for(let i=0;i<n;i++){const v=f();s+=v;if(vals)vals.push(v)}
+    S.means.push(s/n);
+    if(vals)S.last={vals,mean:s/n};else if(j===k-1)S.last=null;
+  }
+  draw();
+}
+function prep(c){
+  const r=window.devicePixelRatio||1,w=c.clientWidth,h=c.clientHeight;
+  c.width=w*r;c.height=h*r;const x=c.getContext('2d');x.setTransform(r,0,0,r,0,0);x.clearRect(0,0,w,h);
+  x.font='12px system-ui,sans-serif';return[x,w,h];
+}
+function axes(x,w,h,P,lo,hi){
+  x.strokeStyle=css('--mut');x.fillStyle=css('--mut');x.lineWidth=1;x.textAlign='center';
+  x.beginPath();x.moveTo(P.l,h-P.b);x.lineTo(w-P.r,h-P.b);x.stroke();
+  for(let i=0;i<=5;i++){const v=lo+(hi-lo)*i/5;x.fillText(fmt(v,hi-lo),P.l+(w-P.l-P.r)*i/5,h-P.b+15)}
+}
+function bars(x,w,h,P,dens,lo,hi,color,alpha){
+  const nb=dens.length,mx=Math.max(...dens),bwp=(w-P.l-P.r)/nb;
+  x.fillStyle=color;x.globalAlpha=alpha;
+  dens.forEach((d,i)=>{const bh=d/mx*(h-P.b-P.t)*.92;x.fillRect(P.l+i*bwp+1,h-P.b-bh,bwp-2,bh)});
+  x.globalAlpha=1;return mx;
+}
+function drawPop(){
+  const[x,w,h]=prep($('c1')),P={l:10,r:10,t:10,b:26},p=S.pop;
+  bars(x,w,h,P,p.dens,p.lo,p.hi,css('--pop'),.75);axes(x,w,h,P,p.lo,p.hi);
+  const X=v=>P.l+(v-p.lo)/(p.hi-p.lo)*(w-P.l-P.r);
+  if(!p.bad){x.setLineDash([6,4]);x.strokeStyle=css('--tru');x.lineWidth=2;x.beginPath();x.moveTo(X(p.mu),P.t);x.lineTo(X(p.mu),h-P.b);x.stroke();x.setLineDash([])}
+  else{x.fillStyle=css('--tru');x.textAlign='left';x.fillText('Recortada a [−10, 10]. Las colas son muy pesadas.',P.l+4,P.t+12)}
+  if(!p.bad)bracket(x,X,P.t+22,p.mu-p.sd,p.mu+p.sd,'± σ');
+  if(S.last){x.strokeStyle=css('--obs');x.lineWidth=1.5;x.globalAlpha=.7;
+    S.last.vals.forEach(v=>{if(v>=p.lo&&v<=p.hi){x.beginPath();x.moveTo(X(v),h-P.b);x.lineTo(X(v),h-P.b-14);x.stroke()}});x.globalAlpha=1}
+}
+function bracket(x,X,y,a,b,label){
+  x.strokeStyle=css('--ink');x.fillStyle=css('--ink');x.lineWidth=1.5;x.beginPath();
+  x.moveTo(X(a),y);x.lineTo(X(b),y);x.moveTo(X(a),y-5);x.lineTo(X(a),y+5);x.moveTo(X(b),y-5);x.lineTo(X(b),y+5);x.stroke();
+  x.textAlign='center';x.fillText(label,X((a+b)/2),y-8);
+}
+function drawMeans(){
+  const[x,w,h]=prep($('c2')),P={l:10,r:10,t:10,b:26},p=S.pop,n=S.n,lo=p.lo,hi=p.hi,R=hi-lo;
+  let se=NaN,bw;
+  if(p.bad)bw=R/80;else{se=p.sd/Math.sqrt(n);bw=Math.max(se/5,R/400)}
+  const nb=Math.ceil(R/bw);bw=R/nb;
+  const c=new Array(nb).fill(0),N=S.means.length;
+  S.means.forEach(v=>{const i=Math.floor((v-lo)/bw);if(i>=0&&i<nb)c[i]++});
+  const dens=c.map(v=>N?v/N/bw:0),curveMax=p.bad?0:1/(se*Math.sqrt(2*Math.PI));
+  const mx=Math.max(...dens,curveMax,1e-9),X=v=>P.l+(v-lo)/R*(w-P.l-P.r),Y=d=>h-P.b-d/mx*(h-P.b-P.t)*.92;
+  x.fillStyle=css('--obs');x.globalAlpha=.75;
+  const bwp=(w-P.l-P.r)/nb;
+  dens.forEach((d,i)=>{if(d>0)x.fillRect(P.l+i*bwp,Y(d),Math.max(1,bwp-(bwp>4?1:0)),h-P.b-Y(d))});
+  x.globalAlpha=1;
+  axes(x,w,h,P,lo,hi);
+  if(!p.bad){
+    x.strokeStyle=css('--tru');x.lineWidth=2.5;x.beginPath();
+    for(let i=0;i<=400;i++){const v=lo+R*i/400,d=Math.exp(-((v-p.mu)**2)/(2*se*se))/(se*Math.sqrt(2*Math.PI));
+      i?x.lineTo(X(v),Y(d)):x.moveTo(X(v),Y(d))}x.stroke();
+    bracket(x,X,Y(curveMax*.45),p.mu-se,p.mu+se,'± σ/√n');
+  }
+  if(S.last&&S.last.mean>=lo&&S.last.mean<=hi){x.strokeStyle=css('--ink');x.lineWidth=1.5;x.setLineDash([3,3]);x.beginPath();x.moveTo(X(S.last.mean),P.t);x.lineTo(X(S.last.mean),h-P.b);x.stroke();x.setLineDash([])}
+}
+function stats(){
+  const p=S.pop,N=S.means.length,n=S.n,f=(v,d=3)=>isFinite(v)?v.toFixed(d):'—';
+  $('cnt').textContent=N;$('on').textContent=n;
+  $('mu').textContent=p.bad?'no existe':f(p.mu);
+  $('se').textContent=p.bad?'no existe':f(p.sd/Math.sqrt(n));
+  $('sk').textContent=p.bad?'—':f(p.sk,2);$('skm').textContent=p.bad?'—':f(p.sk/Math.sqrt(n),2);
+  if(N<2){$('mm').textContent='—';$('sm').textContent='—';$('ss').textContent='—';$('msg').textContent='';return}
+  let m=0;for(const v of S.means)m+=v;m/=N;
+  let m2=0,m3=0;for(const v of S.means){const e=v-m;m2+=e*e;m3+=e*e*e}
+  const sd=Math.sqrt(m2/(N-1));
+  $('mm').textContent=f(m);$('sm').textContent=f(sd);$('ss').textContent=p.bad?'—':f(m3/N/Math.pow(m2/N,1.5),2);
+  const el=$('msg');
+  if(p.bad){el.className='warn';el.textContent='Con la Cauchy, subir n no reduce la dispersión ni forma una campana: la media de n valores tiene la misma distribución que un solo valor.'}
+  else{el.className='note';el.textContent=N<200?'Toma más muestras para que el histograma muestre la forma con claridad.':
+    n<5&&p.sk>0.3?'Con n pequeño y una población asimétrica la forma de las medias aún se parece a la población. Sube n.':
+    n>=30?'Con este n las medias ya siguen muy de cerca la normal teórica.':''}
+}
+function draw(){drawPop();drawMeans();stats()}
+function reset(auto){S.means=[];S.last=null;if(auto)take(500);else draw()}
+function change(){S.key=$('dist').value;S.n=+$('n').value;setPop();reset(true)}
+$('dist').addEventListener('change',change);
+$('n').addEventListener('input',()=>{S.n=+$('n').value;reset(true)});
+$('b1').onclick=()=>take(1);$('b100').onclick=()=>take(100);$('b1000').onclick=()=>take(1000);
+$('br').onclick=()=>reset(false);
+addEventListener('resize',draw);
+change();
+</script>
+</body>
+</html>
