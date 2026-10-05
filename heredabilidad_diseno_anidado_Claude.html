@@ -98,7 +98,8 @@ th:first-child,td:first-child{text-align:left}
 <section class="panel">
 <h2>Repeticiones: distribución de cada estimador</h2>
 <canvas id="c2" style="height:260px" role="img" aria-label="Histogramas de las tres estimaciones de heredabilidad"></canvas>
-<table style="margin-top:8px" id="rt"><tbody><tr><td class="note">Presiona «Repetir 1000 veces» para comparar los tres estimadores.</td></tr></tbody></table>
+<p class="note"><span class="sw" style="background:var(--s)"></span>Componente padre &nbsp; <span class="sw" style="background:var(--d)"></span>Componente madre &nbsp; <span class="sw" style="background:var(--sd)"></span>Padre + madre &nbsp; <span class="sw" style="background:var(--tru)"></span>h² verdadera.<br>Los dos ejes son fijos: horizontal = h² estimada, vertical = densidad (área 1 por estimador). Al aumentar padres, madres o hijos las distribuciones se estrechan y suben; al disminuirlos se ensanchan y se aplanan. Líneas punteadas finas: configuración anterior. Se recalcula sola (1000 repeticiones) al mover un control.</p>
+<table style="margin-top:8px" id="rt"><tbody><tr><td class="note">Calculando repeticiones…</td></tr></tbody></table>
 </section>
 
 <section class="panel theory">
@@ -168,22 +169,32 @@ function drawNest(){
     x.strokeStyle=ink;x.lineWidth=2.5;x.beginPath();x.moveTo(X(i)+slot*.04,Y(a.ms[i]));x.lineTo(X(i)+slot*.96,Y(a.ms[i]));x.stroke();
   });
 }
+const YMAX=10,HLO=-1,HHI=3,HNB=80,KEYS=[['hs','--s'],['hd','--d'],['hsd','--sd']];
+function dens(arr){
+  const bw=(HHI-HLO)/HNB,c=new Array(HNB).fill(0);
+  arr.forEach(v=>{const i=Math.floor((v-HLO)/bw);if(i>=0&&i<HNB)c[i]++});
+  return c.map(v=>v/arr.length/bw);
+}
+function step(x,X,Y,W,d){
+  x.beginPath();x.moveTo(X(HLO),Y(0));
+  d.forEach((v,i)=>{x.lineTo(X(HLO)+i*W,Y(v));x.lineTo(X(HLO)+(i+1)*W,Y(v))});
+  x.lineTo(X(HHI),Y(0));
+}
 function drawHist(){
   const[x,w,h]=prep($('c2'));if(!reps)return;
-  const P={l:42,r:10,t:10,b:30},lo=-1,hi=3,nb=40,bw=(hi-lo)/nb;
-  const keys=[['hs','--s'],['hd','--d'],['hsd','--sd']];
-  const cs=keys.map(([k])=>{const c=new Array(nb).fill(0);reps[k].forEach(v=>{c[Math.max(0,Math.min(nb-1,Math.floor((v-lo)/bw)))]++});return c});
-  const mx=Math.max(...cs.flat()),X=v=>P.l+(v-lo)/(hi-lo)*(w-P.l-P.r),Y=c=>h-P.b-c/mx*(h-P.b-P.t),W=(w-P.l-P.r)/nb;
-  x.fillStyle=css('--shade');x.fillRect(X(lo),P.t,X(0)-X(lo),h-P.b-P.t);x.fillRect(X(1),P.t,X(hi)-X(1),h-P.b-P.t);
-  keys.forEach(([k,c],q)=>{
-    x.beginPath();x.moveTo(X(lo),Y(0));
-    cs[q].forEach((v,i)=>{x.lineTo(X(lo)+i*W,Y(v));x.lineTo(X(lo)+(i+1)*W,Y(v))});
-    x.lineTo(X(hi),Y(0));x.closePath();x.globalAlpha=.22;x.fillStyle=css(c);x.fill();
+  const P={l:42,r:10,t:10,b:30},X=v=>P.l+(v-HLO)/(HHI-HLO)*(w-P.l-P.r),Y=v=>h-P.b-Math.min(v,YMAX)/YMAX*(h-P.b-P.t),W=(w-P.l-P.r)/HNB;
+  x.fillStyle=css('--shade');x.fillRect(X(HLO),P.t,X(0)-X(HLO),h-P.b-P.t);x.fillRect(X(1),P.t,X(HHI)-X(1),h-P.b-P.t);
+  x.strokeStyle=css('--line');x.fillStyle=css('--mut');x.lineWidth=1;x.textAlign='right';
+  for(let v=0;v<=YMAX;v+=2){x.beginPath();x.moveTo(P.l,Y(v));x.lineTo(w-P.r,Y(v));x.stroke();x.fillText(v,P.l-6,Y(v)+4)}
+  x.save();x.translate(10,(P.t+h-P.b)/2);x.rotate(-Math.PI/2);x.textAlign='center';x.fillText('Densidad',0,0);x.restore();
+  if(reps.prev)KEYS.forEach(([k,c])=>{step(x,X,Y,W,reps.prev[k]);x.setLineDash([4,3]);x.strokeStyle=css(c);x.globalAlpha=.55;x.lineWidth=1.3;x.stroke();x.setLineDash([]);x.globalAlpha=1});
+  KEYS.forEach(([k,c])=>{
+    step(x,X,Y,W,reps.d[k]);x.globalAlpha=.22;x.fillStyle=css(c);x.fill();
     x.globalAlpha=1;x.strokeStyle=css(c);x.lineWidth=2;x.stroke();
   });
   x.strokeStyle=css('--mut');x.lineWidth=1;x.beginPath();x.moveTo(P.l,h-P.b);x.lineTo(w-P.r,h-P.b);x.stroke();
   x.fillStyle=css('--mut');x.textAlign='center';
-  for(let v=lo;v<=hi;v+=.5)x.fillText(v.toFixed(1),X(v),h-16);
+  for(let v=HLO;v<=HHI;v+=.5)x.fillText(v.toFixed(1),X(v),h-16);
   x.fillText('h² estimada (zona sombreada: fuera de 0–1)',(P.l+w-P.r)/2,h-3);
   x.lineWidth=2.5;x.strokeStyle=css('--tru');x.beginPath();x.moveTo(X(reps.p.h),P.t);x.lineTo(X(reps.p.h),h-P.b);x.stroke();
 }
@@ -199,24 +210,25 @@ function one(){
 function many(){
   const p=par(),R={hs:[],hd:[],hsd:[],p};
   for(let i=0;i<1000;i++){const a=anova(sim(p));R.hs.push(a.hs);R.hd.push(a.hd);R.hsd.push(a.hsd)}
-  reps=R;
+  R.d={};KEYS.forEach(([k])=>R.d[k]=dens(R[k]));
+  R.prev=reps?reps.d:null;reps=R;
   const E={hs:p.h,hd:p.h+p.v+4*p.m,hsd:p.h+p.v/2+2*p.m};
   const rows=[['hs','Componente padre','cs'],['hd','Componente madre','cd'],['hsd','Padre + madre','csd']].map(([k,nm,c])=>{
-    const v=R[k],m=mean(v),sd=Math.sqrt(v.reduce((a,b)=>a+(b-m)**2,0)/999),out=v.filter(z=>z<0||z>1).length/10;
-    return`<tr><td class="${c}"><b>${nm}</b></td><td>${E[k].toFixed(2)}</td><td>${m.toFixed(2)}</td><td>${(m-p.h>=0?'+':'')+(m-p.h).toFixed(2)}</td><td>${sd.toFixed(2)}</td><td>${out.toFixed(1)} %</td></tr>`}).join('');
-  $('rt').innerHTML=`<thead><tr><th>Estimador</th><th>Valor esperado</th><th>Media observada</th><th>Sesgo vs h²</th><th>Desv. estándar</th><th>Fuera de 0–1</th></tr></thead><tbody>${rows}</tbody>`;
+    const v=R[k],m=mean(v),sd=Math.sqrt(v.reduce((a,b)=>a+(b-m)**2,0)/999),out=v.filter(z=>z<0||z>1).length/10,off=v.filter(z=>z<HLO||z>=HHI).length/10;
+    return`<tr><td class="${c}"><b>${nm}</b></td><td>${E[k].toFixed(2)}</td><td>${m.toFixed(2)}</td><td>${(m-p.h>=0?'+':'')+(m-p.h).toFixed(2)}</td><td>${sd.toFixed(2)}</td><td>${out.toFixed(1)} %</td><td>${off.toFixed(1)} %</td></tr>`}).join('');
+  $('rt').innerHTML='<thead><tr><th>Estimador</th><th>Valor esperado</th><th>Media observada</th><th>Sesgo vs h²</th><th>Desv. estándar</th><th>Fuera de 0–1</th><th>Fuera del gráfico</th></tr></thead><tbody>'+rows+'</tbody>';
   drawHist();
 }
+let tm=null;
 function upd(){
   const p=par();
   $('oh').textContent=p.h.toFixed(2);$('ov').textContent=p.v.toFixed(2);$('om').textContent=p.m.toFixed(2);
   $('os').textContent=p.s;$('od').textContent=p.d;$('on').textContent=p.n;$('tot').textContent=p.s*p.d*p.n;
   $('warn').textContent=p.h+p.v/4+p.m>0.99?'Los componentes casi agotan la varianza: casi no queda varianza ambiental individual.':'';
-  reps=null;$('rt').innerHTML='<tbody><tr><td class="note">Presiona «Repetir 1000 veces» para comparar los tres estimadores.</td></tr></tbody>';
-  drawHist();one();
+  one();clearTimeout(tm);tm=setTimeout(many,150);
 }
 ['h','v','m','s','d','n'].forEach(i=>$(i).addEventListener('input',upd));
-document.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{const[h,v,m]=b.dataset.p.split(',');$('h').value=h;$('v').value=v;$('m').value=m;upd();many()});
+document.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{const[h,v,m]=b.dataset.p.split(',');$('h').value=h;$('v').value=v;$('m').value=m;upd()});
 $('b1').onclick=one;$('b2').onclick=many;
 addEventListener('resize',()=>{drawNest();drawHist()});
 upd();

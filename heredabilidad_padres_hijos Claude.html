@@ -81,7 +81,8 @@ Línea sólida: regresión estimada. Línea punteada: pendiente verdadera h². L
 <section class="panel">
 <h2>Repeticiones: distribución de la pendiente estimada</h2>
 <canvas id="c2" style="height:250px" role="img" aria-label="Histograma de pendientes estimadas"></canvas>
-<div class="k" id="rs"><span class="note">Presiona «Repetir 1000 veces» para ver cuánto varía la estimación entre muestras.</span></div>
+<p class="note">Los dos ejes son fijos: horizontal = pendiente estimada, vertical = densidad (el área total es 1). Al aumentar las parejas o los hijos por pareja la distribución se estrecha y sube; al disminuirlos se ensancha y se aplana. Línea gris punteada: distribución con la configuración anterior. Se recalcula sola (1000 repeticiones) cuando mueves h², las parejas o los hijos por pareja.</p>
+<div class="k" id="rs"><span class="note">Calculando repeticiones…</span></div>
 </section>
 
 <section class="panel theory">
@@ -104,13 +105,11 @@ const par=()=>({h:+$('h2').value,n:+$('np').value,k:+$('k').value,q:+$('q').valu
 const mean=a=>a.reduce((x,y)=>x+y,0)/a.length;
 
 function sim(p){
-  const VA=p.h*100,VE=100-VA,sA=Math.sqrt(VA),sE=Math.sqrt(VE),sM=Math.sqrt(VA/2);
+  const VA=p.h*100,VE=100-VA,sA=Math.sqrt(VA),sE=Math.sqrt(VE),sO=Math.sqrt((VA/2+VE)/p.k);
   const ind=()=>{const a=sA*randn();return{a,p:100+a+sE*randn()}};
   const d=[];
   for(let i=0;i<p.n;i++){
-    const f=ind(),m=ind(),mid=(f.a+m.a)/2;let s=0;
-    for(let j=0;j<p.k;j++)s+=100+mid+sM*randn()+sE*randn();
-    d.push({x:(f.p+m.p)/2,y:s/p.k});
+    const f=ind(),m=ind(),mid=(f.a+m.a)/2;d.push({x:(f.p+m.p)/2,y:100+mid+sO*randn()});
   }
   return d;
 }
@@ -152,19 +151,30 @@ function drawScatter(){
     x.moveTo(X(lo),Y(cur.r.my+b*(lo-cur.r.mx)));x.lineTo(X(hi),Y(cur.r.my+b*(hi-cur.r.mx)));x.stroke();x.setLineDash([])};
   line(cur.p.h,[7,5],css('--tru'));line(cur.r.b,[],css('--obs'));
 }
+const YMAX=16,HLO=-0.75,HHI=1.75,HNB=125;
+function dens(arr){
+  const bw=(HHI-HLO)/HNB,c=new Array(HNB).fill(0);
+  arr.forEach(v=>{const i=Math.floor((v-HLO)/bw);if(i>=0&&i<HNB)c[i]++});
+  return c.map(v=>v/arr.length/bw);
+}
 function drawHist(){
   const[x,w,h]=prep($('c2'));if(!reps)return;
-  const P={l:42,r:10,t:10,b:30},lo=-0.5,hi=1.5,nb=40,bw=(hi-lo)/nb,cnt=new Array(nb).fill(0);
-  reps.b.forEach(v=>{cnt[Math.max(0,Math.min(nb-1,Math.floor((v-lo)/bw)))]++});
-  const mx=Math.max(...cnt),X=v=>P.l+(v-lo)/(hi-lo)*(w-P.l-P.r),Y=c=>h-P.b-c/mx*(h-P.b-P.t);
-  x.fillStyle=css('--shade');x.fillRect(X(lo),P.t,X(0)-X(lo),h-P.b-P.t);x.fillRect(X(1),P.t,X(hi)-X(1),h-P.b-P.t);
-  x.fillStyle=css('--obs');x.globalAlpha=.8;
-  cnt.forEach((c,i)=>x.fillRect(X(lo+i*bw)+1,Y(c),(w-P.l-P.r)/nb-2,h-P.b-Y(c)));x.globalAlpha=1;
-  x.strokeStyle=css('--mut');x.beginPath();x.moveTo(P.l,h-P.b);x.lineTo(w-P.r,h-P.b);x.stroke();
+  const P={l:42,r:10,t:10,b:30},X=v=>P.l+(v-HLO)/(HHI-HLO)*(w-P.l-P.r),Y=v=>h-P.b-Math.min(v,YMAX)/YMAX*(h-P.b-P.t),W=(w-P.l-P.r)/HNB;
+  x.fillStyle=css('--shade');x.fillRect(X(HLO),P.t,X(0)-X(HLO),h-P.b-P.t);x.fillRect(X(1),P.t,X(HHI)-X(1),h-P.b-P.t);
+  x.strokeStyle=css('--line');x.fillStyle=css('--mut');x.lineWidth=1;x.textAlign='right';
+  for(let v=0;v<=YMAX;v+=4){x.beginPath();x.moveTo(P.l,Y(v));x.lineTo(w-P.r,Y(v));x.stroke();x.fillText(v,P.l-6,Y(v)+4)}
+  x.save();x.translate(10,(P.t+h-P.b)/2);x.rotate(-Math.PI/2);x.textAlign='center';x.fillText('Densidad',0,0);x.restore();
+  if(reps.prev){
+    x.beginPath();x.moveTo(X(HLO),Y(0));
+    reps.prev.forEach((v,i)=>{x.lineTo(X(HLO)+i*W,Y(v));x.lineTo(X(HLO)+(i+1)*W,Y(v))});
+    x.lineTo(X(HHI),Y(0));x.setLineDash([4,3]);x.strokeStyle=css('--mut');x.lineWidth=1.5;x.stroke();x.setLineDash([]);
+  }
+  x.fillStyle=css('--obs');x.globalAlpha=.75;
+  reps.d.forEach((v,i)=>{if(v>0)x.fillRect(X(HLO)+i*W+.3,Y(v),Math.max(1,W-.6),h-P.b-Y(v))});x.globalAlpha=1;
+  x.strokeStyle=css('--mut');x.lineWidth=1;x.beginPath();x.moveTo(P.l,h-P.b);x.lineTo(w-P.r,h-P.b);x.stroke();
   x.fillStyle=css('--mut');x.textAlign='center';
-  for(let v=lo;v<=hi+1e-9;v+=.25)x.fillText(v.toFixed(2),X(v),h-16);
+  for(let v=-.5;v<=HHI+1e-9;v+=.25)x.fillText(v.toFixed(2),X(v),h-16);
   x.fillText('Pendiente estimada (zona sombreada: fuera de 0–1)',(P.l+w-P.r)/2,h-3);
-  x.textAlign='right';x.fillText(mx,P.l-6,P.t+8);x.fillText(0,P.l-6,h-P.b);
   x.lineWidth=2.5;x.strokeStyle=css('--tru');x.beginPath();x.moveTo(X(reps.p.h),P.t);x.lineTo(X(reps.p.h),h-P.b);x.stroke();
   x.setLineDash([6,4]);x.strokeStyle=css('--obs');x.beginPath();x.moveTo(X(reps.m),P.t);x.lineTo(X(reps.m),h-P.b);x.stroke();x.setLineDash([]);
 }
@@ -181,19 +191,23 @@ function many(){
   const p=par(),bs=[];
   for(let i=0;i<1000;i++)bs.push(reg(sim(p)).b);
   const m=mean(bs),sd=Math.sqrt(bs.reduce((x,y)=>x+(y-m)**2,0)/999);
-  reps={b:bs,m,p};
+  const out=bs.filter(v=>v<0||v>1).length/10,off=bs.filter(v=>v<HLO||v>=HHI).length/10;
+  reps={b:bs,m,p,d:dens(bs),prev:reps?reps.d:null};
   $('rs').innerHTML=`<div><small>Media de las pendientes</small><span class="big o">${m.toFixed(2)}</span></div>
   <div><small>h² verdadera</small><span class="big t">${p.h.toFixed(2)}</span></div>
   <div><small>Desv. estándar observada</small><span class="big">${sd.toFixed(2)}</span></div>
-  <p class="note" style="width:100%;margin:6px 0 0">El estimador es insesgado: la media coincide con h². Línea naranja: valor verdadero. Línea punteada: media de las estimaciones.</p>`;
+  <div><small>Fuera de 0–1</small><span class="big">${out.toFixed(1)} %</span></div>
+  ${off>0?`<div><small>Fuera del gráfico</small><span class="big">${off.toFixed(1)} %</span></div>`:''}`;
   drawHist();
 }
-function upd(){
+let tm=null;
+function labels(){
   const p=par();$('oh').textContent=p.h.toFixed(2);$('op').textContent=p.n;$('ok').textContent=p.k;$('oq').textContent=Math.round(p.q*100)+' %';
-  reps=null;$('rs').innerHTML='<span class="note">Presiona «Repetir 1000 veces» para ver cuánto varía la estimación entre muestras.</span>';
-  drawHist();one();
 }
-['h2','np','k','q'].forEach(i=>$(i).addEventListener('input',upd));
+function upd(){labels();one();clearTimeout(tm);tm=setTimeout(many,150)}
+function updQ(){labels();one()}
+['h2','np','k'].forEach(i=>$(i).addEventListener('input',upd));
+$('q').addEventListener('input',updQ);
 $('b1').onclick=one;$('b2').onclick=many;
 addEventListener('resize',()=>{drawScatter();drawHist()});
 upd();

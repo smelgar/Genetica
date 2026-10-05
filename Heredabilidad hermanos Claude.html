@@ -51,7 +51,7 @@ th:first-child,td:first-child{text-align:left}
 <p class="note" style="margin-top:10px">Total de animales medidos: <b id="n">200</b>. Varianza fenotípica fija en 100 (media 100).</p>
 <div class="btns">
 <button id="b1">Nueva muestra</button>
-<button id="b2" class="alt">Repetir el experimento 1000 veces</button>
+<button id="b2" class="alt">Repetir 1000 veces</button>
 </div>
 </section>
 
@@ -85,7 +85,8 @@ th:first-child,td:first-child{text-align:left}
 <section class="panel">
 <h2>Repeticiones: distribución de la h² estimada</h2>
 <canvas id="c2" role="img" aria-label="Histograma de estimaciones de heredabilidad"></canvas>
-<div class="k" id="rs"><span class="note">Presiona «Repetir el experimento 1000 veces» para ver cuánto varía la estimación de una muestra a otra.</span></div>
+<p class="note">Los dos ejes son fijos: horizontal = h² estimada, vertical = densidad (el área total es 1). Al aumentar padres o hijos por padre la distribución se estrecha y sube; al disminuirlos se ensancha y se aplana. Línea gris punteada: distribución con la configuración anterior. Se recalcula sola (1000 repeticiones) cuando mueves un control.</p>
+<div class="k" id="rs"><span class="note">Calculando repeticiones…</span></div>
 </section>
 
 <section class="panel theory">
@@ -142,20 +143,31 @@ function drawFam(){
     x.beginPath();x.moveTo(X(i)-slot*.4,Y(cur.a.m[i]));x.lineTo(X(i)+slot*.4,Y(cur.a.m[i]));x.stroke();
   });
 }
+const YMAX=8,HLO=-1,HHI=3,HNB=80;
+function dens(arr){
+  const bw=(HHI-HLO)/HNB,c=new Array(HNB).fill(0);
+  arr.forEach(v=>{const i=Math.floor((v-HLO)/bw);if(i>=0&&i<HNB)c[i]++});
+  return c.map(v=>v/arr.length/bw);
+}
 function drawHist(){
   const[x,w,h]=prep($('c2'));if(!reps)return;
-  const P={l:42,r:10,t:10,b:28},lo=-1,hi=3,nb=40,bw=(hi-lo)/nb,cnt=new Array(nb).fill(0);
-  reps.h.forEach(v=>{cnt[Math.max(0,Math.min(nb-1,Math.floor((v-lo)/bw)))]++});
-  const mx=Math.max(...cnt),X=v=>P.l+(v-lo)/(hi-lo)*(w-P.l-P.r),Y=c=>h-P.b-c/mx*(h-P.b-P.t);
+  const P={l:42,r:10,t:10,b:28},X=v=>P.l+(v-HLO)/(HHI-HLO)*(w-P.l-P.r),Y=v=>h-P.b-Math.min(v,YMAX)/YMAX*(h-P.b-P.t),W=(w-P.l-P.r)/HNB;
   x.fillStyle=css('--shade');
-  x.fillRect(X(lo),P.t,X(0)-X(lo),h-P.b-P.t);x.fillRect(X(1),P.t,X(hi)-X(1),h-P.b-P.t);
-  x.fillStyle=css('--obs');x.globalAlpha=.8;
-  cnt.forEach((c,i)=>x.fillRect(X(lo+i*bw)+1,Y(c),(w-P.l-P.r)/nb-2,h-P.b-Y(c)));x.globalAlpha=1;
-  x.strokeStyle=css('--mut');x.beginPath();x.moveTo(P.l,h-P.b);x.lineTo(w-P.r,h-P.b);x.stroke();
+  x.fillRect(X(HLO),P.t,X(0)-X(HLO),h-P.b-P.t);x.fillRect(X(1),P.t,X(HHI)-X(1),h-P.b-P.t);
+  x.strokeStyle=css('--line');x.fillStyle=css('--mut');x.lineWidth=1;x.textAlign='right';
+  for(let v=0;v<=YMAX;v+=2){x.beginPath();x.moveTo(P.l,Y(v));x.lineTo(w-P.r,Y(v));x.stroke();x.fillText(v,P.l-6,Y(v)+4)}
+  x.save();x.translate(10,(P.t+h-P.b)/2);x.rotate(-Math.PI/2);x.textAlign='center';x.fillText('Densidad',0,0);x.restore();
+  if(reps.prev){
+    x.beginPath();x.moveTo(X(HLO),Y(0));
+    reps.prev.forEach((v,i)=>{x.lineTo(X(HLO)+i*W,Y(v));x.lineTo(X(HLO)+(i+1)*W,Y(v))});
+    x.lineTo(X(HHI),Y(0));x.setLineDash([4,3]);x.strokeStyle=css('--mut');x.lineWidth=1.5;x.stroke();x.setLineDash([]);
+  }
+  x.fillStyle=css('--obs');x.globalAlpha=.75;
+  reps.d.forEach((v,i)=>{if(v>0)x.fillRect(X(HLO)+i*W+.5,Y(v),Math.max(1,W-1),h-P.b-Y(v))});x.globalAlpha=1;
+  x.strokeStyle=css('--mut');x.lineWidth=1;x.beginPath();x.moveTo(P.l,h-P.b);x.lineTo(w-P.r,h-P.b);x.stroke();
   x.fillStyle=css('--mut');x.textAlign='center';
-  for(let v=lo;v<=hi;v+=.5)x.fillText(v.toFixed(1),X(v),h-12);
+  for(let v=HLO;v<=HHI;v+=.5)x.fillText(v.toFixed(1),X(v),h-12);
   x.fillText('h² estimada (zona sombreada: fuera de 0–1)',(P.l+w-P.r)/2,h-1);
-  x.textAlign='right';x.fillText(mx,P.l-6,P.t+8);x.fillText(0,P.l-6,h-P.b);
   x.lineWidth=2.5;x.strokeStyle=css('--tru');x.beginPath();x.moveTo(X(reps.p.h),P.t);x.lineTo(X(reps.p.h),h-P.b);x.stroke();
   x.setLineDash([6,4]);x.strokeStyle=css('--obs');x.beginPath();x.moveTo(X(reps.mean),P.t);x.lineTo(X(reps.mean),h-P.b);x.stroke();x.setLineDash([]);
 }
@@ -174,22 +186,22 @@ function one(){
   drawFam();
 }
 function many(){
-  const p=par(),hs=[],ses=[];
-  for(let i=0;i<1000;i++){const a=anova(sim(p.h,p.s,p.k));hs.push(a.h);ses.push(a.se)}
-  const mean=hs.reduce((x,y)=>x+y)/hs.length,sd=Math.sqrt(hs.reduce((x,y)=>x+(y-mean)**2,0)/(hs.length-1));
-  const out=hs.filter(v=>v<0||v>1).length/10;
-  reps={h:hs,mean,p};
+  const p=par(),hs=[];
+  for(let i=0;i<1000;i++)hs.push(anova(sim(p.h,p.s,p.k)).h);
+  const mean=hs.reduce((x,y)=>x+y,0)/hs.length,sd=Math.sqrt(hs.reduce((x,y)=>x+(y-mean)**2,0)/(hs.length-1));
+  const out=hs.filter(v=>v<0||v>1).length/10,off=hs.filter(v=>v<HLO||v>=HHI).length/10;
+  reps={h:hs,mean,p,d:dens(hs),prev:reps?reps.d:null};
   $('rs').innerHTML=`<div><small>Media de las estimaciones</small><span class="big o">${mean.toFixed(2)}</span></div>
   <div><small>h² verdadera</small><span class="big t">${p.h.toFixed(2)}</span></div>
   <div><small>Desv. estándar observada</small><span class="big">${sd.toFixed(2)}</span></div>
   <div><small>Fuera de 0–1</small><span class="big">${out.toFixed(1)} %</span></div>
-  <p class="note" style="width:100%;margin:6px 0 0">El estimador es insesgado (la media coincide con h²), pero cada muestra individual puede estar lejos. Línea naranja: valor verdadero. Línea punteada: media de las estimaciones.</p>`;
+  ${off>0?`<div><small>Fuera del gráfico</small><span class="big">${off.toFixed(1)} %</span></div>`:''}`;
   drawHist();
 }
+let tm=null;
 function upd(){
   const p=par();$('oh').textContent=p.h.toFixed(2);$('os').textContent=p.s;$('ok').textContent=p.k;$('n').textContent=p.s*p.k;
-  reps=null;$('rs').innerHTML='<span class="note">Presiona «Repetir el experimento 1000 veces» para ver cuánto varía la estimación de una muestra a otra.</span>';
-  drawHist();one();
+  one();clearTimeout(tm);tm=setTimeout(many,150);
 }
 ['h2','s','k'].forEach(i=>$(i).addEventListener('input',upd));
 $('b1').onclick=one;$('b2').onclick=many;
