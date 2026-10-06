@@ -59,7 +59,8 @@ th:first-child,td:first-child{text-align:left}
 <section class="panel">
 <h2>Una muestra: fenotipos por familia</h2>
 <canvas id="c1" role="img" aria-label="Fenotipos de los hijos agrupados por padre"></canvas>
-<p class="note">Cada columna es un padre. Puntos: hijos. Barra: media de la familia. Línea punteada: media general. Si h² es alta, las medias de familia se separan más.</p>
+<div class="k"><div><small>Desv. estándar entre medias de familia</small><span id="sdm" class="big o"></span></div><div><small>Esperada con la h² verdadera</small><span id="sde" class="big t"></span></div></div>
+<p class="note">Cada columna es un padre. Puntos: hijos. Barra naranja: media de la familia. Línea punteada: media general. El eje vertical es fijo (70 a 130, con varianza fenotípica 100), y al mover h² se reutilizan los mismos números aleatorios: solo cambia el componente genético. Al subir h², las medias de familia se separan más. «Nueva muestra» sortea números nuevos.</p>
 </section>
 <section class="panel">
 <h2>Análisis de varianza de la muestra</h2>
@@ -129,17 +130,17 @@ let cur=null,reps=null;
 function drawFam(){
   if(!cur)return;
   const[x,w,h]=prep($('c1')),P={l:42,r:8,t:10,b:24},s=cur.fam.length;
-  const all=cur.fam.flat();let lo=Math.min(...all),hi=Math.max(...all);const pd=(hi-lo)*.06;lo-=pd;hi+=pd;
+  const lo=70,hi=130;
   const slot=(w-P.l-P.r)/s,X=i=>P.l+(i+.5)*slot,Y=v=>P.t+(hi-v)/(hi-lo)*(h-P.t-P.b);
   x.strokeStyle=css('--line');x.fillStyle=css('--mut');x.lineWidth=1;
-  for(let i=0;i<=4;i++){const v=lo+(hi-lo)*i/4,y=Y(v);x.beginPath();x.moveTo(P.l,y);x.lineTo(w-P.r,y);x.stroke();x.textAlign='right';x.fillText(v.toFixed(0),P.l-6,y+4)}
+  for(let v=lo;v<=hi;v+=10){const y=Y(v);x.beginPath();x.moveTo(P.l,y);x.lineTo(w-P.r,y);x.stroke();x.textAlign='right';x.fillText(v,P.l-6,y+4)}
   x.textAlign='center';x.fillText('Padres',(P.l+w-P.r)/2,h-6);
   x.setLineDash([5,4]);x.strokeStyle=css('--mut');x.beginPath();x.moveTo(P.l,Y(cur.a.g));x.lineTo(w-P.r,Y(cur.a.g));x.stroke();x.setLineDash([]);
   const rad=Math.max(1.6,Math.min(3.5,slot/6));
   cur.fam.forEach((a,i)=>{
     x.fillStyle=css('--obs');x.globalAlpha=.55;
-    a.forEach((y,j)=>{x.beginPath();x.arc(X(i)+cur.jit[i][j]*slot*.34,Y(y),rad,0,6.283);x.fill()});
-    x.globalAlpha=1;x.strokeStyle=css('--tru');x.lineWidth=2.5;
+    a.forEach((y,j)=>{if(y<lo||y>hi)return;x.beginPath();x.arc(X(i)+cur.jit[i][j]*slot*.34,Y(y),rad,0,6.283);x.fill()});
+    x.globalAlpha=1;x.strokeStyle=css('--tru');x.lineWidth=3;
     x.beginPath();x.moveTo(X(i)-slot*.4,Y(cur.a.m[i]));x.lineTo(X(i)+slot*.4,Y(cur.a.m[i]));x.stroke();
   });
 }
@@ -171,9 +172,20 @@ function drawHist(){
   x.lineWidth=2.5;x.strokeStyle=css('--tru');x.beginPath();x.moveTo(X(reps.p.h),P.t);x.lineTo(X(reps.p.h),h-P.b);x.stroke();
   x.setLineDash([6,4]);x.strokeStyle=css('--obs');x.beginPath();x.moveTo(X(reps.mean),P.t);x.lineTo(X(reps.mean),h-P.b);x.stroke();x.setLineDash([]);
 }
-function one(){
-  const p=par(),fam=sim(p.h,p.s,p.k),jit=fam.map(a=>a.map(()=>Math.random()*2-1)),a=anova(fam);
+let Z=null;
+function simZ(h,Z){
+  const VP=100,VA=h*VP,sdS=Math.sqrt(VA)/2,sdW=Math.sqrt(VP-VA/4);
+  return Z.zs.map((zs,i)=>{const g=sdS*zs;return Z.zw[i].map(zw=>100+g+sdW*zw)});
+}
+function one(force){
+  const p=par();
+  if(force||!Z||Z.s!==p.s||Z.k!==p.k)Z={s:p.s,k:p.k,zs:Array.from({length:p.s},()=>randn()),
+    zw:Array.from({length:p.s},()=>Array.from({length:p.k},()=>randn())),
+    jit:Array.from({length:p.s},()=>Array.from({length:p.k},()=>Math.random()*2-1))};
+  const fam=simZ(p.h,Z),jit=Z.jit,a=anova(fam);
   cur={fam,jit,a,p};
+  const mm=a.m.reduce((u,v)=>u+v,0)/a.m.length,sdm=Math.sqrt(a.m.reduce((u,v)=>u+(v-mm)**2,0)/(a.m.length-1));
+  $('sdm').textContent=sdm.toFixed(2);$('sde').textContent=Math.sqrt(p.h*25+(100-p.h*25)/p.k).toFixed(2);
   const f=(v,d=2)=>v.toFixed(d);
   $('dfb').textContent=a.dfb;$('dfw').textContent=a.dfw;
   $('ssb').textContent=f(a.ssb,1);$('ssw').textContent=f(a.ssw,1);

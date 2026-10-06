@@ -12,7 +12,7 @@
 
 -[Simulador de heredabilidad con promedio de padres y promedio de hijos](https://smelgar.github.io/Genetica/heredabilidad_padres_hijos%20Claude.html)
 
--[Simulador de heredabilidad con medios hermanos](https://smelgar.github.io/Genetica/Heredabilidad%20hermanos%20Claude.html)
+-[Simulador de heredabilidad con medios hermanos](https://smelgar.github.io/Genetica/heredabilidad_medios_hermanos_v2_Claude.html)
 
 -[Simulador de heredabilidad con análisis de hermanos](https://smelgar.github.io/Genetica/heredabilidad_diseno_anidado%20Claude.html)
 
@@ -21,5 +21,6 @@
 -[Simulador de ANOVA jerárquico](https://smelgar.github.io/Genetica/anova_jerarquico_componentes_Claude.html)
 
 -[Varianza genética cuando hay ligamiento entre dos loci](https://smelgar.github.io/Genetica/varianza_ligamiento_dos_loci_Claude.html)
+
 
 
