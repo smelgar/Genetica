@@ -103,7 +103,8 @@ tr.row{cursor:pointer}
 <div><canvas id="c4" role="img" aria-label="Histograma de σ²d estimado"></canvas><p class="note cd" style="text-align:center">σ̂²<sub>d</sub> (madres)</p></div>
 <div><canvas id="c5" role="img" aria-label="Histograma de σ²w estimado"></canvas><p class="note cw" style="text-align:center">σ̂²<sub>w</sub> (dentro)</p></div>
 </div>
-<table id="tr" style="margin-top:10px"><tbody><tr><td class="note">Presiona «Repetir 1000 veces».</td></tr></tbody></table>
+<p class="note" style="margin-top:8px">Los ejes de estos tres gráficos <b>no cambian</b> al variar el número de padres, madres por padre o hijos por madre. El horizontal está centrado en el valor verdadero (línea naranja) y el vertical es densidad (área 1). Al aumentar los individuos, las distribuciones se estrechan y suben; al disminuirlos, se ensanchan y se aplanan. Los ejes sí se reescalan si cambias los componentes verdaderos. Línea punteada oscura: media de las estimaciones. Línea gris punteada: configuración anterior. Zona sombreada: valores negativos. Se recalcula sola (1000 repeticiones) al mover un control.</p>
+<table id="tr" style="margin-top:10px"><tbody><tr><td class="note">Calculando repeticiones…</td></tr></tbody></table>
 </section>
 
 <section class="panel theory">
@@ -207,44 +208,68 @@ function one(){
   const p=par(),f=sim(p),a=anova(f),j=f.map(S=>S.map(D=>D.map(()=>Math.random()*2-1)));
   cur={p,f,a,j};drawNest();tables();
 }
-function hist(id,arr,tv,color){
-  const[x,w,h]=prep($(id)),P={l:8,r:8,t:8,b:22},q=[...arr].sort((u,v)=>u-v);
-  let lo=Math.min(q[Math.floor(.005*q.length)],tv),hi=Math.max(q[Math.floor(.995*q.length)],tv);
-  const pd=(hi-lo)*.05;lo-=pd;hi+=pd;const nb=30,bw=(hi-lo)/nb,c=new Array(nb).fill(0);
-  arr.forEach(v=>{const i=Math.floor((v-lo)/bw);if(i>=0&&i<nb)c[i]++});
-  const mx=Math.max(...c),X=v=>P.l+(v-lo)/(hi-lo)*(w-P.l-P.r),Wd=(w-P.l-P.r)/nb;
-  if(lo<0){x.fillStyle=css('--shade');x.fillRect(X(lo),P.t,X(0)-X(lo),h-P.t-P.b)}
+const HN=100,REF={s:20,d:3,n:5};
+// Ejes de referencia: dependen de los valores verdaderos, pero NO de s, d ni n.
+function refAxes(p){
+  const {s,d,n}=REF,g1=s-1,g2=s*(d-1),g3=s*d*(n-1);
+  const E1=p.vw+n*p.vd+d*n*p.vs,E2=p.vw+n*p.vd,E3=p.vw;
+  const V1=2*E1*E1/g1,V2=2*E2*E2/g2,V3=2*E3*E3/g3;
+  const sd=[Math.sqrt(V1+V2)/(d*n),Math.sqrt(V2+V3)/n,Math.sqrt(V3)],tv=[p.vs,p.vd,p.vw];
+  return sd.map((u,k)=>({lo:tv[k]-5*u,hi:tv[k]+5*u,ymax:1.6/u}));
+}
+function dens(arr,ax){
+  const bw=(ax.hi-ax.lo)/HN,c=new Array(HN).fill(0);
+  arr.forEach(v=>{const i=Math.floor((v-ax.lo)/bw);if(i>=0&&i<HN)c[i]++});
+  return c.map(v=>v/arr.length/bw);
+}
+function drawH(id,k,color){
+  const[x,w,h]=prep($(id));if(!reps)return;
+  const ax=reps.ax[k],P={l:36,r:8,t:8,b:22},X=v=>P.l+(v-ax.lo)/(ax.hi-ax.lo)*(w-P.l-P.r),
+    Y=v=>h-P.b-Math.min(v,ax.ymax)/ax.ymax*(h-P.t-P.b),W=(w-P.l-P.r)/HN;
+  if(ax.lo<0){x.fillStyle=css('--shade');x.fillRect(X(ax.lo),P.t,X(0)-X(ax.lo),h-P.t-P.b)}
+  x.strokeStyle=css('--line');x.fillStyle=css('--mut');x.lineWidth=1;x.textAlign='right';x.font='11px system-ui,sans-serif';
+  [0,.5,1].forEach(f=>{const v=ax.ymax*f;x.beginPath();x.moveTo(P.l,Y(v));x.lineTo(w-P.r,Y(v));x.stroke();x.fillText(v.toPrecision(2),P.l-4,Y(v)+4)});
+  if(reps.prev){
+    x.beginPath();x.moveTo(X(ax.lo),Y(0));
+    reps.prev[k].forEach((v,i)=>{x.lineTo(X(ax.lo)+i*W,Y(v));x.lineTo(X(ax.lo)+(i+1)*W,Y(v))});
+    x.lineTo(X(ax.hi),Y(0));x.setLineDash([4,3]);x.strokeStyle=css('--mut');x.lineWidth=1.5;x.stroke();x.setLineDash([]);
+  }
   x.fillStyle=css(color);x.globalAlpha=.75;
-  c.forEach((v,i)=>{const bh=v/mx*(h-P.t-P.b);x.fillRect(P.l+i*Wd+1,h-P.b-bh,Wd-2,bh)});x.globalAlpha=1;
+  reps.d[k].forEach((v,i)=>{if(v>0)x.fillRect(X(ax.lo)+i*W+.3,Y(v),Math.max(1,W-.6),h-P.b-Y(v))});x.globalAlpha=1;
   x.strokeStyle=css('--mut');x.lineWidth=1;x.beginPath();x.moveTo(P.l,h-P.b);x.lineTo(w-P.r,h-P.b);x.stroke();
   x.fillStyle=css('--mut');x.textAlign='center';
-  for(let i=0;i<=3;i++){const v=lo+(hi-lo)*i/3;x.fillText(v.toFixed(0),X(v),h-7)}
+  for(let i=0;i<=4;i++){const v=ax.lo+(ax.hi-ax.lo)*i/4;x.fillText(v.toFixed(0),X(v),h-7)}
+  const tv=[reps.p.vs,reps.p.vd,reps.p.vw][k];
   x.strokeStyle=css('--tru');x.lineWidth=2.5;x.beginPath();x.moveTo(X(tv),P.t);x.lineTo(X(tv),h-P.b);x.stroke();
-  const m=mean(arr);x.setLineDash([5,4]);x.strokeStyle=css('--ink');x.lineWidth=1.5;x.beginPath();x.moveTo(X(m),P.t);x.lineTo(X(m),h-P.b);x.stroke();x.setLineDash([]);
+  x.setLineDash([5,4]);x.strokeStyle=css('--ink');x.lineWidth=1.5;x.beginPath();x.moveTo(X(reps.mean[k]),P.t);x.lineTo(X(reps.mean[k]),h-P.b);x.stroke();x.setLineDash([]);
 }
+function drawReps(){drawH('c3',0,'--s');drawH('c4',1,'--d');drawH('c5',2,'--w')}
 function many(){
   const p=par(),R={cm:[[],[],[]],v:[[],[],[]],p};
   for(let i=0;i<1000;i++){const a=anova(sim(p));a.cm.forEach((v,k)=>R.cm[k].push(v));[a.vs,a.vd,a.vw].forEach((v,k)=>R.v[k].push(v))}
-  reps=R;const{d,n}=p;
+  R.ax=refAxes(p);R.d=R.v.map((a,k)=>dens(a,R.ax[k]));R.mean=R.v.map(mean);
+  R.off=R.v.map((a,k)=>100*a.filter(v=>v<R.ax[k].lo||v>=R.ax[k].hi).length/a.length);
+  const same=reps&&reps.ax.every((u,k)=>Math.abs(u.lo-R.ax[k].lo)<1e-9&&Math.abs(u.hi-R.ax[k].hi)<1e-9);
+  R.prev=same?reps.d:null;reps=R;const{d,n}=p;
   const ev=[p.vw+n*p.vd+d*n*p.vs,p.vw+n*p.vd,p.vw],tru=[p.vs,p.vd,p.vw];
   const sd=a=>{const m=mean(a);return Math.sqrt(a.reduce((x,y)=>x+(y-m)**2,0)/(a.length-1))};
-  const row=(nm,c,e,a,neg)=>`<tr><td class="${c}"><b>${nm}</b></td><td>${f2(e)}</td><td>${f2(mean(a))}</td><td>${f2(sd(a))}</td><td>${neg===null?'—':(100*a.filter(v=>v<0).length/a.length).toFixed(1)+' %'}</td></tr>`;
-  $('tr').innerHTML='<thead><tr><th>Cantidad</th><th>Valor esperado / verdadero</th><th>Media de 1000</th><th>Desv. estándar</th><th>Estimaciones negativas</th></tr></thead><tbody>'+
+  const row=(nm,c,e,a,k)=>`<tr><td class="${c}"><b>${nm}</b></td><td>${f2(e)}</td><td>${f2(mean(a))}</td><td>${f2(sd(a))}</td><td>${k===null?'—':(100*a.filter(v=>v<0).length/a.length).toFixed(1)+' %'}</td><td>${k===null?'—':R.off[k].toFixed(1)+' %'}</td></tr>`;
+  $('tr').innerHTML='<thead><tr><th>Cantidad</th><th>Valor esperado / verdadero</th><th>Media de 1000</th><th>Desv. estándar</th><th>Estimaciones negativas</th><th>Fuera del gráfico</th></tr></thead><tbody>'+
     row('CM padres','cs',ev[0],R.cm[0],null)+row('CM madres','cd',ev[1],R.cm[1],null)+row('CM dentro','cw',ev[2],R.cm[2],null)+
-    row('σ̂²<sub>s</sub>','cs',tru[0],R.v[0],1)+row('σ̂²<sub>d</sub>','cd',tru[1],R.v[1],1)+row('σ̂²<sub>w</sub>','cw',tru[2],R.v[2],1)+'</tbody>';
-  hist('c3',R.v[0],p.vs,'--s');hist('c4',R.v[1],p.vd,'--d');hist('c5',R.v[2],p.vw,'--w');
+    row('σ̂²<sub>s</sub>','cs',tru[0],R.v[0],0)+row('σ̂²<sub>d</sub>','cd',tru[1],R.v[1],1)+row('σ̂²<sub>w</sub>','cw',tru[2],R.v[2],2)+'</tbody>';
+  drawReps();
 }
+let tm=null;
 function upd(){
   const p=par();
   [['vs','ovs'],['vd','ovd'],['vw','ovw'],['s','os'],['d','od'],['n','on']].forEach(([a,b])=>$(b).textContent=p[a]);
   $('tot').textContent=p.s*p.d*p.n;
-  reps=null;$('tr').innerHTML='<tbody><tr><td class="note">Presiona «Repetir 1000 veces».</td></tr></tbody>';
-  ['c3','c4','c5'].forEach(i=>prep($(i)));one();
+  one();clearTimeout(tm);tm=setTimeout(many,150);
 }
 ['vs','vd','vw','s','d','n'].forEach(i=>$(i).addEventListener('input',upd));
 document.querySelectorAll('button[data-m]').forEach(b=>b.onclick=()=>setMode(+b.dataset.m));
 $('b1').onclick=one;$('b2').onclick=many;
-addEventListener('resize',()=>{drawNest();if(reps){const R=reps;hist('c3',R.v[0],R.p.vs,'--s');hist('c4',R.v[1],R.p.vd,'--d');hist('c5',R.v[2],R.p.vw,'--w')}});
+addEventListener('resize',()=>{drawNest();drawReps()});
 upd();setMode(1);
 </script>
 </body>
