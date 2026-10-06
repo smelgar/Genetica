@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dos loci: desequilibrio de ligamiento y varianza genética</title>
+<style>
+:root{--bg:#f3f6f7;--panel:#fff;--ink:#16202a;--mut:#5b6873;--line:#d3dbe0;--s:#1b7f9e;--tru:#c2410c;--shade:#e9eef0}
+@media(prefers-color-scheme:dark){:root{--bg:#0e1418;--panel:#161e24;--ink:#e6edf1;--mut:#93a1ab;--line:#2b373f;--s:#4fb8d6;--tru:#f08a4b;--shade:#1d2830}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:1120px;margin:0 auto;padding:20px 16px 40px}
+h1{font-size:1.6rem;margin:0 0 4px;font-weight:650}
+h2{font-size:1.05rem;margin:0 0 8px;font-weight:650}
+p{margin:0 0 8px;max-width:76ch}
+.sub{color:var(--mut);margin-bottom:16px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px 16px;margin-bottom:14px}
+.ctrl{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px 22px}
+label{display:block;font-weight:600;font-size:.92rem}
+label output{float:right;font-variant-numeric:tabular-nums;color:var(--s)}
+input[type=range]{width:100%;accent-color:var(--s)}
+.btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px;align-items:center}
+button{font:inherit;font-weight:600;padding:8px 14px;border-radius:6px;border:1px solid var(--s);background:var(--s);color:#fff;cursor:pointer}
+button.alt{background:transparent;color:var(--s)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--tru);outline-offset:2px}
+.grid{display:grid;grid-template-columns:1.2fr 1fr;gap:14px}
+@media(max-width:900px){.grid{grid-template-columns:1fr}}
+canvas{width:100%;display:block}
+#c1{height:220px}#c2{height:230px}#c3{height:210px}#c4{height:220px}
+.k{display:flex;flex-wrap:wrap;gap:8px 20px;margin-top:8px}
+.k div{min-width:100px}.k small{display:block;color:var(--mut)}
+.big{font-size:1.3rem;font-weight:700;font-variant-numeric:tabular-nums}
+.cs{color:var(--s)}.ct{color:var(--tru)}
+.note{color:var(--mut);font-size:.9rem}
+.sw{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px}
+.eq{background:var(--shade);border-radius:6px;padding:8px 12px;margin:6px 0;font-size:.95rem}
+.theory li{margin-bottom:5px}
+</style>
+</head>
+<body>
+<main>
+<h1>Dos loci: desequilibrio de ligamiento y varianza genética</h1>
+<p class="sub">Dos loci con efecto aditivo sobre un carácter. Con solo dos loci se pueden ver las cuatro frecuencias de haplotipos, el desequilibrio D y su efecto directo sobre la varianza genética.</p>
+
+<section class="panel" aria-label="Parámetros">
+<div class="ctrl">
+<label>Frecuencia del alelo «+» en el locus 1 (p₁) <output id="op1">0.50</output><input id="p1" type="range" min="0.1" max="0.9" step="0.05" value="0.5"></label>
+<label>Frecuencia del alelo «+» en el locus 2 (p₂) <output id="op2">0.50</output><input id="p2" type="range" min="0.1" max="0.9" step="0.05" value="0.5"></label>
+<label>Efecto del locus 1 (a₁) <output id="oa1">1.00</output><input id="a1" type="range" min="-2" max="2" step="0.25" value="1"></label>
+<label>Efecto del locus 2 (a₂) <output id="oa2">1.00</output><input id="a2" type="range" min="-2" max="2" step="0.25" value="1"></label>
+<label>D inicial (fracción del máximo) <output id="of">1.00</output><input id="f" type="range" min="-1" max="1" step="0.05" value="1"></label>
+<label>Recombinación entre los loci (c) <output id="oc">0.10</output><input id="c" type="range" min="0" max="0.5" step="0.01" value="0.1"></label>
+<label>Fracción seleccionada <output id="osel">100 %</output><input id="sel" type="range" min="10" max="100" step="5" value="100"></label>
+<label>Detener la selección en la generación <output id="ostop">30</output><input id="stop" type="range" min="0" max="30" step="1" value="30"></label>
+<label>h² de referencia <output id="oh">0.50</output><input id="h2" type="range" min="0.2" max="1" step="0.05" value="0.5"></label>
+<label>Tamaño de población (N) <output id="oN">2000</output><input id="N" type="range" min="200" max="5000" step="200" value="2000"></label>
+<label>Generaciones <output id="oT">30</output><input id="T" type="range" min="5" max="50" step="1" value="30"></label>
+</div>
+<p class="note" style="margin-top:10px">D inicial = <b id="d0t"></b> (máximo posible con estas frecuencias: <b id="dmt"></b>). D = f<sub>11</sub> − p₁p₂, donde f<sub>11</sub> es la frecuencia del haplotipo «+ +».</p>
+<div class="btns">
+<button id="bn">Nueva simulación</button>
+<span class="note">Escenarios:</span>
+<button class="alt" data-p="1,0.1,100,30,30,1,1,0.5,2000">Acoplamiento: LD positivo</button>
+<button class="alt" data-p="-1,0.1,100,30,30,1,1,0.5,2000">Repulsión: LD negativo</button>
+<button class="alt" data-p="-1,0.1,100,30,30,1,-1,0.5,2000">Repulsión, efectos opuestos</button>
+<button class="alt" data-p="0,0.1,80,3,30,1,1,1,5000">Selección débil, 3 generaciones</button>
+</div>
+<p class="note" style="margin-top:10px">Apareamiento al azar en una población finita. Al mover un control se repite la simulación con la misma semilla aleatoria, y «Nueva simulación» la cambia.</p>
+</section>
+
+<div class="grid">
+<section class="panel">
+<h2>Desequilibrio de ligamiento D por generación</h2>
+<canvas id="c1" role="img" aria-label="Desequilibrio D por generación, observado y teórico"></canvas>
+<p class="note"><span class="sw" style="background:var(--s)"></span>D observado &nbsp; <span class="sw" style="background:var(--ink)"></span>Teoría sin selección: D(t) = D(0)(1 − c)<sup>t</sup>.</p>
+<h2 style="margin-top:14px">Varianza genética por generación</h2>
+<canvas id="c2" role="img" aria-label="Varianza genética observada y varianza sin desequilibrio"></canvas>
+<p class="note"><span class="sw" style="background:var(--s)"></span>V<sub>G</sub> observada &nbsp; <span class="sw" style="background:var(--tru)"></span>V<sub>LE</sub> = 2p₁q₁a₁² + 2p₂q₂a₂² &nbsp; <span class="sw" style="background:var(--ink)"></span>V<sub>G</sub> teórica sin selección. Línea vertical: generación mostrada.</p>
+</section>
+
+<section class="panel">
+<h2>Generación mostrada</h2>
+<label>Generación <output id="og">0</output><input id="g" type="range" min="0" max="30" step="1" value="0"></label>
+<canvas id="c3" role="img" aria-label="Frecuencias de los cuatro haplotipos observadas y esperadas sin desequilibrio"></canvas>
+<p class="note">Frecuencia de los haplotipos. Barras: observadas. Contorno naranja: esperadas si los loci fueran independientes (p<sub>i</sub>p<sub>j</sub>).</p>
+<canvas id="c4" role="img" aria-label="Distribución del valor genotípico observada y esperada sin desequilibrio"></canvas>
+<p class="note">Distribución del valor genotípico G = a₁x₁ + a₂x₂. Barras: observada. Contorno naranja: esperada sin LD.</p>
+<div class="k">
+<div><small>D</small><span id="vD" class="big"></span></div>
+<div><small>r</small><span id="vr" class="big"></span></div>
+<div><small>h² con V<sub>G</sub> actual</small><span id="vh" class="big"></span></div>
+</div>
+<div class="k">
+<div><small>V<sub>G</sub></small><span id="vg" class="big"></span></div>
+<div><small>V<sub>LE</sub></small><span id="vle" class="big ct"></span></div>
+<div><small>V<sub>LD</sub> = 4a₁a₂D</small><span id="vld" class="big cs"></span></div>
+</div>
+</section>
+</div>
+
+<section class="panel theory">
+<h2>Qué hay detrás</h2>
+<div class="eq">V<sub>G</sub> = 2p₁q₁a₁² + 2p₂q₂a₂² + 4a₁a₂D = V<sub>LE</sub> + V<sub>LD</sub>, con D(t) = D(0)(1 − c)<sup>t</sup></div>
+<ul>
+<li>El signo de V<sub>LD</sub> depende del producto a₁a₂D. Con efectos del mismo signo, D &gt; 0 (acoplamiento) aumenta la varianza y D &lt; 0 (repulsión) la reduce. Con efectos de signo contrario ocurre lo opuesto.</li>
+<li>Con p = 0.5, a₁ = a₂ y D en su valor máximo negativo, solo existen los haplotipos «+ −» y «− +». Todos los individuos tienen el mismo valor genotípico y V<sub>G</sub> = 0, aunque cada locus tenga varianza propia. Con efectos opuestos, ese mismo estado produce la varianza máxima.</li>
+<li>La recombinación reduce D en una fracción c por generación. Con c = 0 los loci están completamente ligados y el LD no decae. Con c = 0.5 D se reduce a la mitad cada generación.</li>
+<li>La selección truncante crea D negativo entre loci de efecto del mismo signo, y la varianza baja. Con solo dos loci, la selección también cambia pronto las frecuencias alélicas, así que parte de la pérdida de V<sub>G</sub> es V<sub>LE</sub> y no LD. Con selección débil durante pocas generaciones (el escenario correspondiente, con h² = 1) se ve el LD casi aislado: V<sub>LD</sub> baja a cerca de −0.2 mientras V<sub>LE</sub> se mantiene, y al detener la selección D vuelve a 0 y V<sub>LD</sub> con él.</li>
+<li>En una población finita D fluctúa por muestreo alrededor de su valor teórico. Más N, menos ruido.</li>
+</ul>
+</section>
+</main>
+
+<script>
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+function mk(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+let seed=77031,S=null;
+const par=()=>({p1:+$('p1').value,p2:+$('p2').value,a1:+$('a1').value,a2:+$('a2').value,f:+$('f').value,c:+$('c').value,
+  sel:+$('sel').value/100,stop:+$('stop').value,h2:+$('h2').value,N:+$('N').value,T:+$('T').value});
+function dRange(p1,p2,f){
+  const q1=1-p1,q2=1-p2,pos=Math.min(p1*q2,q1*p2),neg=Math.min(p1*p2,q1*q2);
+  return f>=0?{D0:f*pos,max:pos}:{D0:f*neg,max:neg};
+}
+function run(P){
+  const rnd=mk(seed),randn=()=>{let u=0;while(!u)u=rnd();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*rnd())};
+  const{p1,p2,a1,a2,N,T,c}=P,q1=1-p1,q2=1-p2,D0=dRange(p1,p2,P.f).D0,n2=2*N;
+  const x=[p1*p2+D0,p1*q2-D0,q1*p2-D0],A0=new Uint8Array(n2),B0=new Uint8Array(n2);
+  let A=A0,B=B0;
+  for(let k=0;k<n2;k++){const u=rnd();
+    if(u<x[0]){A[k]=1;B[k]=1}else if(u<x[0]+x[1]){A[k]=1;B[k]=0}else if(u<x[0]+x[1]+x[2]){A[k]=0;B[k]=1}else{A[k]=0;B[k]=0}}
+  const vle0=2*p1*q1*a1*a1+2*p2*q2*a2*a2,VE=vle0>1e-9?vle0*(1-P.h2)/P.h2:1,sdE=Math.sqrt(VE),gens=[];
+  for(let t=0;t<=T;t++){
+    const g=new Float64Array(N);let sg=0;
+    for(let i=0;i<N;i++){g[i]=a1*(A[2*i]+A[2*i+1])+a2*(B[2*i]+B[2*i+1]);sg+=g[i]}
+    const mg=sg/N;let vg=0;for(let i=0;i<N;i++)vg+=(g[i]-mg)**2;vg/=N;
+    let c1=0,c2=0,c11=0,c12=0,c21=0;
+    for(let k=0;k<n2;k++){c1+=A[k];c2+=B[k];if(A[k]&&B[k])c11++;else if(A[k])c12++;else if(B[k])c21++}
+    const po1=c1/n2,po2=c2/n2,f11=c11/n2,D=f11-po1*po2,den=Math.sqrt(po1*(1-po1)*po2*(1-po2));
+    gens.push({g,vg,D,r:den>1e-9?D/den:0,vle:2*po1*(1-po1)*a1*a1+2*po2*(1-po2)*a2*a2,p1:po1,p2:po2,f:[f11,c12/n2,c21/n2,1-f11-c12/n2-c21/n2]});
+    if(t===T)break;
+    let par=null;
+    if(P.sel<1&&t<P.stop){
+      const ph=Array.from(g,(v,i)=>[v+sdE*randn(),i]).sort((u,v)=>v[0]-u[0]),K=Math.max(2,Math.round(P.sel*N));
+      par=ph.slice(0,K).map(u=>u[1]);
+    }
+    const A2=new Uint8Array(n2),B2=new Uint8Array(n2);
+    for(let i=0;i<N;i++)for(let h=0;h<2;h++){
+      const pr=par?par[(rnd()*par.length)|0]:(rnd()*N)|0,src=rnd()<.5?0:1,s2=rnd()<c?src^1:src;
+      A2[2*i+h]=A[2*pr+src];B2[2*i+h]=B[2*pr+s2];
+    }
+    A=A2;B=B2;
+  }
+  return{gens,vle0,D0};
+}
+function theory(P,R){
+  if(!(P.sel>=1||P.stop<=0))return null;
+  const D=[],V=[];
+  for(let t=0;t<=P.T;t++){const d=R.D0*Math.pow(1-P.c,t);D.push(d);V.push(R.vle0+4*P.a1*P.a2*d)}
+  return{D,V};
+}
+function prep(c){
+  const r=window.devicePixelRatio||1,w=c.clientWidth,h=c.clientHeight;
+  c.width=w*r;c.height=h*r;const x=c.getContext('2d');x.setTransform(r,0,0,r,0,0);x.clearRect(0,0,w,h);
+  x.font='12px system-ui,sans-serif';return[x,w,h];
+}
+function xaxis(x,X,h,P,T){
+  x.fillStyle=css('--mut');x.textAlign='center';const st=Math.max(1,Math.ceil(T/8));
+  for(let t=0;t<=T;t+=st)x.fillText(t,X(t),h-P.b+15);
+  x.fillText('Generación',(P.l+X(T))/2,h-1);
+}
+function series(id,obs,th,extra,symmetric,fmtd){
+  const[x,w,h]=prep($(id)),P={l:48,r:12,t:10,b:26},T=obs[0].length-1;
+  const all=obs.flat().concat(th?th.flat():[]);
+  let lo,hi;
+  if(symmetric){const m=Math.max(.02,...all.map(Math.abs))*1.15;lo=-m;hi=m}
+  else{lo=0;hi=Math.max(...all,.1)*1.1}
+  const X=t=>P.l+(t+.5)/(T+1)*(w-P.l-P.r),Y=v=>h-P.b-(v-lo)/(hi-lo)*(h-P.t-P.b);
+  x.strokeStyle=css('--line');x.fillStyle=css('--mut');x.lineWidth=1;x.textAlign='right';
+  for(let i=0;i<=4;i++){const v=lo+(hi-lo)*i/4;x.beginPath();x.moveTo(P.l,Y(v));x.lineTo(w-P.r,Y(v));x.stroke();x.fillText(v.toFixed(fmtd),P.l-6,Y(v)+4)}
+  if(symmetric){x.strokeStyle=css('--mut');x.beginPath();x.moveTo(P.l,Y(0));x.lineTo(w-P.r,Y(0));x.stroke()}
+  xaxis(x,X,h,P,T);
+  const line=(a,c,wd,dash)=>{x.setLineDash(dash||[]);x.strokeStyle=css(c);x.lineWidth=wd;x.beginPath();a.forEach((v,t)=>t?x.lineTo(X(t),Y(v)):x.moveTo(X(t),Y(v)));x.stroke();x.setLineDash([])};
+  if(th)th.forEach(a=>line(a,'--ink',1.5,[2,3]));
+  extra.forEach(([a,c,wd,dash])=>line(a,c,wd,dash));
+  x.fillStyle=css('--s');obs[0].forEach((v,t)=>{x.beginPath();x.arc(X(t),Y(v),2.4,0,6.283);x.fill()});
+  if(S.P.sel<1&&S.P.stop<T){x.setLineDash([3,3]);x.strokeStyle=css('--mut');x.beginPath();x.moveTo(X(S.P.stop),P.t);x.lineTo(X(S.P.stop),h-P.b);x.stroke();x.setLineDash([]);x.fillStyle=css('--mut');x.textAlign='left';x.fillText('fin de la selección',X(S.P.stop)+4,P.t+10)}
+  x.strokeStyle=css('--ink');x.lineWidth=1;x.globalAlpha=.5;x.beginPath();x.moveTo(X(S.show),P.t);x.lineTo(X(S.show),h-P.b);x.stroke();x.globalAlpha=1;
+}
+function drawSeries(){
+  const G=S.gens,D=G.map(g=>g.D),VG=G.map(g=>g.vg),VL=G.map(g=>g.vle);
+  series('c1',[D],S.th?[S.th.D]:null,[[D,'--s',2.2]],true,3);
+  series('c2',[VG],S.th?[S.th.V]:null,[[VL,'--tru',2,[6,4]],[VG,'--s',2.5]],false,2);
+}
+function drawHap(){
+  const[x,w,h]=prep($('c3')),P={l:38,r:10,t:10,b:30},g=S.gens[S.show],f=g.f,p1=g.p1,p2=g.p2,q1=1-p1,q2=1-p2;
+  const ex=[p1*p2,p1*q2,q1*p2,q1*q2],nm=['+ +','+ −','− +','− −'],mx=Math.max(.3,...f,...ex)*1.12;
+  const Y=v=>h-P.b-v/mx*(h-P.t-P.b),W=(w-P.l-P.r)/4;
+  x.strokeStyle=css('--line');x.fillStyle=css('--mut');x.lineWidth=1;x.textAlign='right';
+  for(let i=0;i<=4;i++){const v=mx*i/4;x.beginPath();x.moveTo(P.l,Y(v));x.lineTo(w-P.r,Y(v));x.stroke();x.fillText(v.toFixed(2),P.l-6,Y(v)+4)}
+  f.forEach((v,i)=>{
+    const cx=P.l+(i+.5)*W,bw=W*.5;
+    x.fillStyle=css('--s');x.globalAlpha=.8;x.fillRect(cx-bw/2,Y(v),bw,h-P.b-Y(v));x.globalAlpha=1;
+    x.strokeStyle=css('--tru');x.lineWidth=2.5;x.strokeRect(cx-bw/2-3,Y(ex[i]),bw+6,h-P.b-Y(ex[i]));
+    x.fillStyle=css('--mut');x.textAlign='center';x.fillText(nm[i],cx,h-P.b+15);
+  });
+  x.textAlign='center';x.fillText('Haplotipo (locus 1, locus 2)',(P.l+w-P.r)/2,h-1);
+}
+function drawG(){
+  const[x,w,h]=prep($('c4')),P={l:38,r:10,t:10,b:30},G=S.gens[S.show],{a1,a2,N}=S.P,p1=G.p1,p2=G.p2;
+  const key=v=>Math.round(v*1e5)/1e5,obs=new Map(),exp=new Map();
+  G.g.forEach(v=>{const k=key(v);obs.set(k,(obs.get(k)||0)+1/N)});
+  const h1=[(1-p1)**2,2*p1*(1-p1),p1*p1],h2=[(1-p2)**2,2*p2*(1-p2),p2*p2];
+  for(let i=0;i<3;i++)for(let j=0;j<3;j++){const k=key(a1*i+a2*j);exp.set(k,(exp.get(k)||0)+h1[i]*h2[j])}
+  const ks=[...new Set([...obs.keys(),...exp.keys()])].sort((u,v)=>u-v);
+  let lo=ks[0],hi=ks[ks.length-1];if(hi-lo<1e-9){lo-=1;hi+=1}const pd=(hi-lo)*.08;lo-=pd;hi+=pd;
+  let gap=hi-lo;for(let i=1;i<ks.length;i++)gap=Math.min(gap,ks[i]-ks[i-1]);
+  const X=v=>P.l+(v-lo)/(hi-lo)*(w-P.l-P.r),bw=Math.max(6,Math.min(46,gap/(hi-lo)*(w-P.l-P.r)*.6));
+  const mx=Math.max(.3,...obs.values(),...exp.values())*1.1,Y=v=>h-P.b-v/mx*(h-P.t-P.b);
+  x.strokeStyle=css('--line');x.fillStyle=css('--mut');x.lineWidth=1;x.textAlign='right';
+  for(let i=0;i<=4;i++){const v=mx*i/4;x.beginPath();x.moveTo(P.l,Y(v));x.lineTo(w-P.r,Y(v));x.stroke();x.fillText(v.toFixed(2),P.l-6,Y(v)+4)}
+  ks.forEach(k=>{
+    const o=obs.get(k)||0,e=exp.get(k)||0;
+    x.fillStyle=css('--s');x.globalAlpha=.8;x.fillRect(X(k)-bw/2,Y(o),bw,h-P.b-Y(o));x.globalAlpha=1;
+    x.strokeStyle=css('--tru');x.lineWidth=2.5;x.strokeRect(X(k)-bw/2-3,Y(e),bw+6,h-P.b-Y(e));
+    x.fillStyle=css('--mut');x.textAlign='center';x.fillText(+k.toFixed(2),X(k),h-P.b+15);
+  });
+  x.fillText('Valor genotípico G',(P.l+w-P.r)/2,h-1);
+}
+function summary(){
+  const g=S.gens[S.show],VE=S.vle0>1e-9?S.vle0*(1-S.P.h2)/S.P.h2:1,vld=g.vg-g.vle,sg=v=>(v>=0?'+':'')+v.toFixed(3);
+  $('og').textContent=S.show;$('vD').textContent=sg(g.D);$('vr').textContent=sg(g.r);$('vh').textContent=(g.vg/(g.vg+VE)).toFixed(2);
+  $('vg').textContent=g.vg.toFixed(3);$('vle').textContent=g.vle.toFixed(3);$('vld').textContent=sg(vld);
+}
+function drawShown(){drawHap();drawG();summary()}
+function labels(){
+  const P=par(),d=dRange(P.p1,P.p2,P.f);
+  $('op1').textContent=P.p1.toFixed(2);$('op2').textContent=P.p2.toFixed(2);$('oa1').textContent=P.a1.toFixed(2);$('oa2').textContent=P.a2.toFixed(2);
+  $('of').textContent=P.f.toFixed(2);$('oc').textContent=P.c.toFixed(2);$('osel').textContent=Math.round(P.sel*100)+' %';
+  $('ostop').textContent=P.stop;$('oh').textContent=P.h2.toFixed(2);$('oN').textContent=P.N;$('oT').textContent=P.T;
+  $('d0t').textContent=d.D0.toFixed(3);$('dmt').textContent=(P.f>=0?'+':'−')+d.max.toFixed(3)+' en ese sentido';
+}
+function update(){
+  const st=$('stop'),g=$('g'),T=+$('T').value;
+  if(+st.max!==T){const was=+st.value===+st.max;st.max=T;st.value=was?T:Math.min(+st.value,T)}
+  g.max=T;if(+g.value>T)g.value=T;
+  labels();const P=par(),R=run(P);
+  S={P,gens:R.gens,vle0:R.vle0,th:theory(P,R),show:+g.value};
+  drawSeries();drawShown();
+}
+['p1','p2','a1','a2','f','c','sel','stop','h2','N','T'].forEach(i=>$(i).addEventListener('input',update));
+$('g').addEventListener('input',()=>{S.show=+$('g').value;drawSeries();drawShown()});
+$('bn').onclick=()=>{seed=Math.floor(Math.random()*1e9);update()};
+document.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{
+  const[f,c,sel,stop,T,a1,a2,h2,N]=b.dataset.p.split(',');
+  $('T').value=T;$('stop').max=T;$('f').value=f;$('c').value=c;$('sel').value=sel;$('stop').value=stop;$('a1').value=a1;$('a2').value=a2;$('h2').value=h2;$('N').value=N;
+  $('p1').value=0.5;$('p2').value=0.5;update();
+});
+addEventListener('resize',()=>{if(S){drawSeries();drawShown()}});
+update();
+</script>
+</body>
+</html>

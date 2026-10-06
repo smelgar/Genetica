@@ -20,5 +20,6 @@
 
 -[Simulador de ANOVA jerárquico](https://smelgar.github.io/Genetica/anova_jerarquico_componentes_Claude.html)
 
+-[Varianza genética cuando hay ligamiento entre dos loci](https://smelgar.github.io/Genetica/varianza_ligamiento_dos_loci_Claude.html)
 
 
