@@ -24,3 +24,7 @@
 
 -[Simulador de estimación de componentes principales y TLC](https://smelgar.github.io/Genetica/Simulador_de_Componentes_de_Varianza_y_TLC.html)
 
+-[Simulador de selección y la respuesta a la selección](https://smelgar.github.io/Genetica/Simulación_Selección_y_respuesta_a_la_selección.html)
+
+
+

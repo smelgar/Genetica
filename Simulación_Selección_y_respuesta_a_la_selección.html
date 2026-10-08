@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Selección y respuesta a la selección</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#fafaf7;--fg:#1d2420;--mut:#667068;--card:#fff;--line:#d9ddd5;--par:#9aa59d;--sel:#d9642b;--off:#1f7a5a;--mu:#445;}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#161a17;--fg:#e8ece6;--mut:#9aa59d;--card:#1f2521;--line:#34403a;--par:#7d8a82;--sel:#f08a4f;--off:#4cc596;--mu:#bbc;}}
+:root[data-theme="dark"]{--bg:#161a17;--fg:#e8ece6;--mut:#9aa59d;--card:#1f2521;--line:#34403a;--par:#7d8a82;--sel:#f08a4f;--off:#4cc596;--mu:#bbc;}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:980px;margin:0 auto;padding:16px}
+h1{font-size:1.4rem;margin:.2em 0}p.s{color:var(--mut);margin:0 0 12px}
+.grid{display:grid;grid-template-columns:260px 1fr;gap:14px}
+@media(max-width:760px){.grid{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px}
+label{display:flex;justify-content:space-between;font-size:.9rem;margin-top:10px}
+label b{font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}
+canvas{width:100%;display:block}
+#c1{height:300px}#c2{height:220px;margin-top:6px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-top:12px}
+.stat{border:1px solid var(--line);border-radius:8px;padding:6px 10px}
+.stat small{color:var(--mut);display:block}.stat span{font-size:1.15rem;font-weight:600;font-variant-numeric:tabular-nums}
+.eq{margin-top:12px;font-size:.92rem;color:var(--mut)}
+.leg{display:flex;flex-wrap:wrap;gap:12px;font-size:.82rem;color:var(--mut);margin-top:6px}
+.leg i{display:inline-block;width:12px;height:12px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+</style></head><body><main>
+<h1>Selección y respuesta a la selección</h1>
+<p class="s">Selección por truncamiento sobre un carácter cuantitativo. Mueve los controles: todo se actualiza solo. Los ejes son fijos para que se aprecie el cambio.</p>
+<div class="grid">
+<div class="card">
+<label>Heredabilidad h² <b id="vh"></b></label><input id="h" type="range" min="0" max="1" step="0.05" value="0.5">
+<label>Proporción seleccionada p <b id="vp"></b></label><input id="p" type="range" min="1" max="99" step="1" value="20">
+<label>Desviación estándar fenotípica σP <b id="vs"></b></label><input id="s" type="range" min="5" max="20" step="1" value="10">
+<label>Generación mostrada <b id="vg"></b></label><input id="g" type="range" min="0" max="10" step="1" value="0">
+<div class="eq">Media inicial μ₀ = 100.<br>Ecuación del criador:<br><b>R = h² · S</b>, con S = i · σP<br>(h² y σP constantes entre generaciones).</div>
+</div>
+<div class="card">
+<canvas id="c1"></canvas>
+<div class="leg"><span><i style="background:var(--par)"></i>Población parental</span><span><i style="background:var(--sel)"></i>Individuos seleccionados</span><span><i style="background:var(--off)"></i>Descendencia</span></div>
+<div class="stats">
+<div class="stat"><small>Intensidad i</small><span id="oi"></span></div>
+<div class="stat"><small>Diferencial S</small><span id="oS"></span></div>
+<div class="stat"><small>Respuesta R</small><span id="oR"></span></div>
+<div class="stat"><small>Media descendencia</small><span id="oM"></span></div>
+</div>
+<canvas id="c2"></canvas>
+</div></div>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const MU0=100,XMIN=40,XMAX=200,YMAX=0.085,G=10;
+const phi=z=>Math.exp(-z*z/2)/Math.sqrt(2*Math.PI);
+function erf(x){const s=x<0?-1:1;x=Math.abs(x);const t=1/(1+0.3275911*x);
+return s*(1-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-0.284496736)*t+0.254829592)*t*Math.exp(-x*x));}
+const Phi=z=>0.5*(1+erf(z/Math.SQRT2));
+function zUpper(p){let lo=-8,hi=8;for(let k=0;k<60;k++){const m=(lo+hi)/2;if(1-Phi(m)>p)lo=m;else hi=m}return(lo+hi)/2}
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+function setup(c){const r=c.getBoundingClientRect(),d=window.devicePixelRatio||1;
+c.width=r.width*d;c.height=r.height*d;const x=c.getContext('2d');x.setTransform(d,0,0,d,0,0);return{x,w:r.width,h:r.height}}
+function hex(c,a){const x=document.createElement('canvas').getContext('2d');x.fillStyle=c;x.globalAlpha=a;return c+''}
+function draw(){
+const h2=+$('h').value,p=+$('p').value/100,sd=+$('s').value,g=+$('g').value;
+const t=zUpper(p),i=phi(t)/p,S=i*sd,R=h2*S;
+$('vh').textContent=h2.toFixed(2);$('vp').textContent=(p*100)+'%';$('vs').textContent=sd;$('vg').textContent=g;
+$('oi').textContent=i.toFixed(2);$('oS').textContent=S.toFixed(1);$('oR').textContent=R.toFixed(1);
+const mu=MU0+g*R,mus=mu+S,mun=mu+R;$('oM').textContent=mun.toFixed(1);
+const col={par:css('--par'),sel:css('--sel'),off:css('--off'),fg:css('--fg'),mut:css('--mut'),line:css('--line')};
+// Panel 1
+let {x,w,h}=setup($('c1'));const L=42,Rr=12,T=14,B=34;
+const X=v=>L+(v-XMIN)/(XMAX-XMIN)*(w-L-Rr),Y=v=>h-B-v/YMAX*(h-B-T);
+const pdf=(v,m)=>phi((v-m)/sd)/sd;
+x.font='12px system-ui';x.strokeStyle=col.line;x.fillStyle=col.mut;x.lineWidth=1;
+x.beginPath();x.moveTo(L,h-B);x.lineTo(w-Rr,h-B);x.moveTo(L,T);x.lineTo(L,h-B);x.stroke();
+for(let v=XMIN;v<=XMAX;v+=20){x.fillText(v,X(v)-8,h-B+16)}
+for(let k=0;k<=4;k++){const v=k*0.02;x.fillText(v.toFixed(2),4,Y(v)+4)}
+x.fillText('Valor fenotípico',(w)/2-40,h-6);
+x.save();x.translate(12,h/2+20);x.rotate(-Math.PI/2);x.fillText('Densidad',0,0);x.restore();
+x.save();x.beginPath();x.rect(L,T,w-L-Rr,h-B-T);x.clip();
+const curve=(m,close)=>{x.beginPath();let f=true;for(let v=XMIN;v<=XMAX;v+=0.5){const px=X(v),py=Y(pdf(v,m));f?x.moveTo(px,py):x.lineTo(px,py);f=false}};
+curve(mu);x.lineTo(X(XMAX),Y(0));x.lineTo(X(XMIN),Y(0));x.closePath();x.globalAlpha=.25;x.fillStyle=col.par;x.fill();x.globalAlpha=1;x.strokeStyle=col.par;x.lineWidth=2;curve(mu);x.stroke();
+const th=mu+t*sd;x.beginPath();x.moveTo(X(Math.max(th,XMIN)),Y(0));for(let v=Math.max(th,XMIN);v<=XMAX;v+=0.5)x.lineTo(X(v),Y(pdf(v,mu)));x.lineTo(X(XMAX),Y(0));x.closePath();x.globalAlpha=.55;x.fillStyle=col.sel;x.fill();x.globalAlpha=1;
+x.strokeStyle=col.off;x.lineWidth=2;x.setLineDash([6,4]);curve(mun);x.stroke();x.setLineDash([]);
+const vl=(v,c,lab,dy)=>{x.strokeStyle=c;x.lineWidth=1.5;x.beginPath();x.moveTo(X(v),Y(0));x.lineTo(X(v),T+dy);x.stroke();x.fillStyle=c;x.fillText(lab,X(v)+4,T+dy+10)};
+vl(mu,col.par,'μ',0);vl(mus,col.sel,'μs',16);vl(mun,col.off,'μ′',32);
+x.strokeStyle=col.sel;x.setLineDash([3,3]);x.beginPath();x.moveTo(X(th),Y(0));x.lineTo(X(th),Y(pdf(th,mu)));x.stroke();x.setLineDash([]);
+x.restore();
+// Panel 2
+({x,w,h}=setup($('c2')));const T2=16,B2=30;
+const X2=v=>L+v/G*(w-L-Rr),Y2=v=>h-B2-(v-100)/200*(h-B2-T2);
+x.font='12px system-ui';x.strokeStyle=col.line;x.fillStyle=col.mut;x.lineWidth=1;
+for(let v=100;v<=300;v+=50){x.beginPath();x.moveTo(L,Y2(v));x.lineTo(w-Rr,Y2(v));x.stroke();x.fillText(v,8,Y2(v)+4)}
+for(let k=0;k<=G;k++)x.fillText(k,X2(k)-3,h-B2+16);
+x.fillText('Generación',w/2-25,h-4);x.fillText('Media del carácter',L+4,11);
+x.save();x.beginPath();x.rect(L,T2-4,w-L-Rr,h-B2-T2+8);x.clip();
+x.strokeStyle=col.off;x.lineWidth=2;x.beginPath();for(let k=0;k<=G;k++){const m=MU0+k*R;k?x.lineTo(X2(k),Y2(m)):x.moveTo(X2(k),Y2(m))}x.stroke();
+for(let k=0;k<=G;k++){x.beginPath();x.arc(X2(k),Y2(MU0+k*R),k===g?6:3,0,7);x.fillStyle=k===g?col.sel:col.off;x.fill()}
+x.restore();
+}
+['h','p','s','g'].forEach(k=>$(k).addEventListener('input',draw));
+addEventListener('resize',draw);matchMedia('(prefers-color-scheme:dark)').addEventListener('change',draw);draw();
+</script></body></html>
