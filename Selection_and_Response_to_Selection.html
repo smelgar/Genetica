@@ -34,7 +34,7 @@ canvas{width:100%;display:block}
 <label>Heritability h² <b id="vh"></b></label><input id="h" type="range" min="0" max="1" step="0.05" value="0.5">
 <label>Proportion selected p <b id="vp"></b></label><input id="p" type="range" min="1" max="99" step="1" value="20">
 <label>Phenotypic standard deviation σP <b id="vs"></b></label><input id="s" type="range" min="5" max="10" step="1" value="10">
-<label>Generation shown <b id="vg"></b></label><input id="g" type="range" min="0" max="8" step="1" value="0">
+<label>Generation shown <b id="vg"></b></label><input id="g" type="range" min="0" max="5" step="1" value="0">
 <div class="eq">Initial mean μ₀ = 100.<br>Breeder's equation:<br><b>R = h² · S</b>, with S = i · σP<br>(h² and σP constant across generations).</div>
 </div>
 <div class="card">
@@ -51,7 +51,7 @@ canvas{width:100%;display:block}
 </main>
 <script>
 const $=id=>document.getElementById(id);
-const MU0=100,XMIN=40,XMAX=400,YMAX=0.085,G=8;
+const MU0=100,XMIN=40,XMAX=300,YMAX=0.085,G=5;
 const phi=z=>Math.exp(-z*z/2)/Math.sqrt(2*Math.PI);
 function erf(x){const s=x<0?-1:1;x=Math.abs(x);const t=1/(1+0.3275911*x);
 return s*(1-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-0.284496736)*t+0.254829592)*t*Math.exp(-x*x));}
@@ -90,9 +90,9 @@ x.strokeStyle=col.sel;x.setLineDash([3,3]);x.beginPath();x.moveTo(X(th),Y(0));x.
 x.restore();
 // Panel 2
 ({x,w,h}=setup($('c2')));const T2=16,B2=30;
-const X2=v=>L+v/G*(w-L-Rr),Y2=v=>h-B2-(v-100)/250*(h-B2-T2);
+const X2=v=>L+v/G*(w-L-Rr),Y2=v=>h-B2-(v-100)/150*(h-B2-T2);
 x.font='12px system-ui';x.strokeStyle=col.line;x.fillStyle=col.mut;x.lineWidth=1;
-for(let v=100;v<=350;v+=50){x.beginPath();x.moveTo(L,Y2(v));x.lineTo(w-Rr,Y2(v));x.stroke();x.fillText(v,8,Y2(v)+4)}
+for(let v=100;v<=250;v+=50){x.beginPath();x.moveTo(L,Y2(v));x.lineTo(w-Rr,Y2(v));x.stroke();x.fillText(v,8,Y2(v)+4)}
 for(let k=0;k<=G;k++)x.fillText(k,X2(k)-3,h-B2+16);
 x.fillText('Generation',w/2-25,h-4);x.fillText('Trait mean',L+4,11);
 x.save();x.beginPath();x.rect(L,T2-4,w-L-Rr,h-B2-T2+8);x.clip();

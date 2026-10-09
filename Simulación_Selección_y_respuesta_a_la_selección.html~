@@ -35,7 +35,7 @@ canvas{width:100%;display:block}
 <label>Proporción seleccionada p <b id="vp"></b></label><input id="p" type="range" min="1" max="99" step="1" value="20">
 <label>Desviación estándar fenotípica &sigma;<sub>P</sub> <b id="vs"></b></label><input id="s" type="range" min="5" max="10" step="1" value="10">
 <label>Generación mostrada <b id="vg"></b></label><input id="g" type="range" min="0" max="5" step="1" value="0">
-<div class="eq">Media inicial μ₀ = 100.<br>Ecuación del criador:<br><b>R = h² · S</b>, con S = i · &sigma;<sub>P</sub><br>(h² y &sigma;<sub>P</sub> constantes entre generaciones).</div>
+<div class="eq">Media inicial μ₀ = 100.<br>Ecuación del criador:<br><b>R = h² · S</b>, con S = i · &sigma;<sub>P</sub><br>(h² y σP constantes entre generaciones).</div>
 </div>
 <div class="card">
 <canvas id="c1"></canvas>
