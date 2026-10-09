@@ -11,7 +11,7 @@
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
 main{max-width:980px;margin:0 auto;padding:16px}
-h1{font-size:1.4rem;margin:.2em 0}p.s{color:var(--mut);margin:0 0 12px}
+h1{font-size:1.4rem;margin:.2em 0}.au{color:var(--mut);font-size:.9rem;margin:0 0 6px}.ob{color:var(--mut);font-size:.82rem;margin:14px 0 0;padding-top:8px;border-top:1px solid var(--line)}p.s{color:var(--mut);margin:0 0 12px}
 .grid{display:grid;grid-template-columns:260px 1fr;gap:14px}
 @media(max-width:760px){.grid{grid-template-columns:1fr}}
 .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px}
@@ -28,6 +28,7 @@ canvas{width:100%;display:block}
 .leg i{display:inline-block;width:12px;height:12px;border-radius:2px;margin-right:4px;vertical-align:-1px}
 </style></head><body><main>
 <h1>Selección y respuesta a la selección</h1>
+<p class="au">Autor: Sergio Melgar · Universidad de San Carlos de Guatemala</p>
 <p class="s">Selección por truncamiento sobre un carácter cuantitativo. Mueve los controles: todo se actualiza solo. Los ejes son fijos para que se aprecie el cambio.</p>
 <div class="grid">
 <div class="card">
@@ -49,6 +50,7 @@ canvas{width:100%;display:block}
 <canvas id="c2"></canvas>
 <canvas id="c3"></canvas>
 </div></div>
+<p class="ob">Observación: esta simulación fue generada por inteligencia artificial.</p>
 </main>
 <script>
 const $=id=>document.getElementById(id);
