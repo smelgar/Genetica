@@ -26,5 +26,9 @@
 
 -[Simulador de selección y la respuesta a la selección](https://smelgar.github.io/Genetica/Simulación_Selección_y_respuesta_a_la_selección.html)
 
+-[Selection and response to selection simulation](https://smelgar.github.io/Genetica/Selection_and_Response_to_Selection.html)
+
+
+
 
 

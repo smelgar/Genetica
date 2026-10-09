@@ -1,8 +1,8 @@
 <!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <!DOCTYPE html>
-<html lang="es"><head><meta charset="utf-8">
+<html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Selección y respuesta a la selección</title>
+<title>Selection and Response to Selection</title>
 <style>
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
 --bg:#fafaf7;--fg:#1d2420;--mut:#667068;--card:#fff;--line:#d9ddd5;--par:#9aa59d;--sel:#d9642b;--off:#1f7a5a;--mu:#445;}
@@ -27,24 +27,24 @@ canvas{width:100%;display:block}
 .leg{display:flex;flex-wrap:wrap;gap:12px;font-size:.82rem;color:var(--mut);margin-top:6px}
 .leg i{display:inline-block;width:12px;height:12px;border-radius:2px;margin-right:4px;vertical-align:-1px}
 </style></head><body><main>
-<h1>Selección y respuesta a la selección</h1>
-<p class="s">Selección por truncamiento sobre un carácter cuantitativo. Mueve los controles: todo se actualiza solo. Los ejes son fijos para que se aprecie el cambio.</p>
+<h1>Selection and Response to Selection</h1>
+<p class="s">Truncation selection on a quantitative trait. Move the controls: everything updates automatically. Axes are fixed so changes in amplitude and separation are easy to see.</p>
 <div class="grid">
 <div class="card">
-<label>Heredabilidad h² <b id="vh"></b></label><input id="h" type="range" min="0" max="1" step="0.05" value="0.5">
-<label>Proporción seleccionada p <b id="vp"></b></label><input id="p" type="range" min="1" max="99" step="1" value="20">
-<label>Desviación estándar fenotípica σP <b id="vs"></b></label><input id="s" type="range" min="5" max="10" step="1" value="10">
-<label>Generación mostrada <b id="vg"></b></label><input id="g" type="range" min="0" max="8" step="1" value="0">
-<div class="eq">Media inicial μ₀ = 100.<br>Ecuación del criador:<br><b>R = h² · S</b>, con S = i · σP<br>(h² y σP constantes entre generaciones).</div>
+<label>Heritability h² <b id="vh"></b></label><input id="h" type="range" min="0" max="1" step="0.05" value="0.5">
+<label>Proportion selected p <b id="vp"></b></label><input id="p" type="range" min="1" max="99" step="1" value="20">
+<label>Phenotypic standard deviation σP <b id="vs"></b></label><input id="s" type="range" min="5" max="10" step="1" value="10">
+<label>Generation shown <b id="vg"></b></label><input id="g" type="range" min="0" max="8" step="1" value="0">
+<div class="eq">Initial mean μ₀ = 100.<br>Breeder's equation:<br><b>R = h² · S</b>, with S = i · σP<br>(h² and σP constant across generations).</div>
 </div>
 <div class="card">
 <canvas id="c1"></canvas>
-<div class="leg"><span><i style="background:var(--par)"></i>Población parental</span><span><i style="background:var(--sel)"></i>Individuos seleccionados</span><span><i style="background:var(--off)"></i>Descendencia</span></div>
+<div class="leg"><span><i style="background:var(--par)"></i>Parental population</span><span><i style="background:var(--sel)"></i>Selected individuals</span><span><i style="background:var(--off)"></i>Offspring</span></div>
 <div class="stats">
-<div class="stat"><small>Intensidad i</small><span id="oi"></span></div>
-<div class="stat"><small>Diferencial S</small><span id="oS"></span></div>
-<div class="stat"><small>Respuesta R</small><span id="oR"></span></div>
-<div class="stat"><small>Media descendencia</small><span id="oM"></span></div>
+<div class="stat"><small>Selection intensity i</small><span id="oi"></span></div>
+<div class="stat"><small>Selection differential S</small><span id="oS"></span></div>
+<div class="stat"><small>Response R</small><span id="oR"></span></div>
+<div class="stat"><small>Offspring mean</small><span id="oM"></span></div>
 </div>
 <canvas id="c2"></canvas>
 </div></div>
@@ -76,15 +76,15 @@ x.font='12px system-ui';x.strokeStyle=col.line;x.fillStyle=col.mut;x.lineWidth=1
 x.beginPath();x.moveTo(L,h-B);x.lineTo(w-Rr,h-B);x.moveTo(L,T);x.lineTo(L,h-B);x.stroke();
 for(let v=100;v<=XMAX;v+=50){x.fillText(v,X(v)-8,h-B+16)}
 for(let k=0;k<=4;k++){const v=k*0.02;x.fillText(v.toFixed(2),4,Y(v)+4)}
-x.fillText('Valor fenotípico',(w)/2-40,h-6);
-x.save();x.translate(12,h/2+20);x.rotate(-Math.PI/2);x.fillText('Densidad',0,0);x.restore();
+x.fillText('Phenotypic value',(w)/2-40,h-6);
+x.save();x.translate(12,h/2+20);x.rotate(-Math.PI/2);x.fillText('Density',0,0);x.restore();
 x.save();x.beginPath();x.rect(L,T,w-L-Rr,h-B-T);x.clip();
 const curve=(m,close)=>{x.beginPath();let f=true;for(let v=XMIN;v<=XMAX;v+=0.5){const px=X(v),py=Y(pdf(v,m));f?x.moveTo(px,py):x.lineTo(px,py);f=false}};
 curve(mu);x.lineTo(X(XMAX),Y(0));x.lineTo(X(XMIN),Y(0));x.closePath();x.globalAlpha=.25;x.fillStyle=col.par;x.fill();x.globalAlpha=1;x.strokeStyle=col.par;x.lineWidth=2;curve(mu);x.stroke();
 const th=mu+t*sd;x.beginPath();x.moveTo(X(Math.max(th,XMIN)),Y(0));for(let v=Math.max(th,XMIN);v<=XMAX;v+=0.5)x.lineTo(X(v),Y(pdf(v,mu)));x.lineTo(X(XMAX),Y(0));x.closePath();x.globalAlpha=.55;x.fillStyle=col.sel;x.fill();x.globalAlpha=1;
 x.strokeStyle=col.off;x.lineWidth=2;x.setLineDash([6,4]);curve(mun);x.stroke();x.setLineDash([]);
 const vl=(v,c,lab,dy)=>{x.strokeStyle=c;x.lineWidth=1.5;x.beginPath();x.moveTo(X(v),Y(0));x.lineTo(X(v),T+dy);x.stroke();x.fillStyle=c;x.fillText(lab,X(v)+4,T+dy+10)};
-if(mun>XMAX){x.fillStyle=col.off;x.fillText('μ′ fuera del rango →',w-Rr-130,T+60)}
+if(mun>XMAX){x.fillStyle=col.off;x.fillText('μ′ out of range →',w-Rr-130,T+60)}
 vl(mu,col.par,'μ',0);vl(mus,col.sel,'μs',16);vl(mun,col.off,'μ′',32);
 x.strokeStyle=col.sel;x.setLineDash([3,3]);x.beginPath();x.moveTo(X(th),Y(0));x.lineTo(X(th),Y(pdf(th,mu)));x.stroke();x.setLineDash([]);
 x.restore();
@@ -94,7 +94,7 @@ const X2=v=>L+v/G*(w-L-Rr),Y2=v=>h-B2-(v-100)/250*(h-B2-T2);
 x.font='12px system-ui';x.strokeStyle=col.line;x.fillStyle=col.mut;x.lineWidth=1;
 for(let v=100;v<=350;v+=50){x.beginPath();x.moveTo(L,Y2(v));x.lineTo(w-Rr,Y2(v));x.stroke();x.fillText(v,8,Y2(v)+4)}
 for(let k=0;k<=G;k++)x.fillText(k,X2(k)-3,h-B2+16);
-x.fillText('Generación',w/2-25,h-4);x.fillText('Media del carácter',L+4,11);
+x.fillText('Generation',w/2-25,h-4);x.fillText('Trait mean',L+4,11);
 x.save();x.beginPath();x.rect(L,T2-4,w-L-Rr,h-B2-T2+8);x.clip();
 x.strokeStyle=col.off;x.lineWidth=2;x.beginPath();for(let k=0;k<=G;k++){const m=MU0+k*R;k?x.lineTo(X2(k),Y2(m)):x.moveTo(X2(k),Y2(m))}x.stroke();
 for(let k=0;k<=G;k++){x.beginPath();x.arc(X2(k),Y2(MU0+k*R),k===g?6:3,0,7);x.fillStyle=k===g?col.sel:col.off;x.fill()}
