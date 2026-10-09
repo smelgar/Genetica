@@ -19,7 +19,7 @@ label{display:flex;justify-content:space-between;font-size:.9rem;margin-top:10px
 label b{font-variant-numeric:tabular-nums}
 input[type=range]{width:100%}
 canvas{width:100%;display:block}
-#c1{height:300px}#c2{height:220px;margin-top:6px}
+#c1{height:300px}#c2{height:220px;margin-top:6px}#c3{height:290px;margin-top:6px}sub{font-size:.72em;line-height:0}
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-top:12px}
 .stat{border:1px solid var(--line);border-radius:8px;padding:6px 10px}
 .stat small{color:var(--mut);display:block}.stat span{font-size:1.15rem;font-weight:600;font-variant-numeric:tabular-nums}
@@ -33,9 +33,9 @@ canvas{width:100%;display:block}
 <div class="card">
 <label>Heritability h² <b id="vh"></b></label><input id="h" type="range" min="0" max="1" step="0.05" value="0.5">
 <label>Proportion selected p <b id="vp"></b></label><input id="p" type="range" min="1" max="99" step="1" value="20">
-<label>Phenotypic standard deviation &sigma;<sub>P</sub> <b id="vs"></b></label><input id="s" type="range" min="5" max="10" step="1" value="10">
+<label><span>Phenotypic standard deviation σ<sub>P</sub></span> <b id="vs"></b></label><input id="s" type="range" min="5" max="10" step="1" value="10">
 <label>Generation shown <b id="vg"></b></label><input id="g" type="range" min="0" max="5" step="1" value="0">
-<div class="eq">Initial mean μ₀ = 100.<br>Breeder's equation:<br><b>R = h² · S</b>, with S = i · &sigma;<sub>P</sub><br>(h² and &sigma;<sub>P</sub> constant across generations).</div>
+<div class="eq">Initial mean μ₀ = 100.<br>Breeder's equation:<br><b>R = h² · S</b>, with S = i · σ<sub>P</sub><br>(h² and σ<sub>P</sub> constant across generations).</div>
 </div>
 <div class="card">
 <canvas id="c1"></canvas>
@@ -47,11 +47,16 @@ canvas{width:100%;display:block}
 <div class="stat"><small>Offspring mean</small><span id="oM"></span></div>
 </div>
 <canvas id="c2"></canvas>
+<canvas id="c3"></canvas>
 </div></div>
 </main>
 <script>
 const $=id=>document.getElementById(id);
 const MU0=100,XMIN=40,XMAX=300,YMAX=0.085,G=5;
+
+let _s=12345;const rnd=()=>{_s|=0;_s=_s+0x6D2B79F5|0;let t=Math.imul(_s^_s>>>15,1|_s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};
+const gauss=()=>Math.sqrt(-2*Math.log(1-rnd()))*Math.cos(2*Math.PI*rnd());
+const ZP=Array.from({length:80},gauss),ZE=Array.from({length:80},gauss);
 const phi=z=>Math.exp(-z*z/2)/Math.sqrt(2*Math.PI);
 function erf(x){const s=x<0?-1:1;x=Math.abs(x);const t=1/(1+0.3275911*x);
 return s*(1-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-0.284496736)*t+0.254829592)*t*Math.exp(-x*x));}
@@ -69,13 +74,13 @@ $('oi').textContent=i.toFixed(2);$('oS').textContent=S.toFixed(1);$('oR').textCo
 const mu=MU0+g*R,mus=mu+S,mun=mu+R;$('oM').textContent=mun.toFixed(1);
 const col={par:css('--par'),sel:css('--sel'),off:css('--off'),fg:css('--fg'),mut:css('--mut'),line:css('--line')};
 // Panel 1
-let {x,w,h}=setup($('c1'));const L=42,Rr=12,T=14,B=34;
+let {x,w,h}=setup($('c1'));const L=50,Rr=12,T=14,B=34;
 const X=v=>L+(v-XMIN)/(XMAX-XMIN)*(w-L-Rr),Y=v=>h-B-v/YMAX*(h-B-T);
 const pdf=(v,m)=>phi((v-m)/sd)/sd;
 x.font='12px system-ui';x.strokeStyle=col.line;x.fillStyle=col.mut;x.lineWidth=1;
 x.beginPath();x.moveTo(L,h-B);x.lineTo(w-Rr,h-B);x.moveTo(L,T);x.lineTo(L,h-B);x.stroke();
 for(let v=100;v<=XMAX;v+=50){x.fillText(v,X(v)-8,h-B+16)}
-for(let k=0;k<=4;k++){const v=k*0.02;x.fillText(v.toFixed(2),4,Y(v)+4)}
+for(let k=0;k<=4;k++){const v=k*0.02;{const t=v.toFixed(2);x.fillText(t,L-6-x.measureText(t).width,Y(v)+4)}}
 x.fillText('Phenotypic value',(w)/2-40,h-6);
 x.save();x.translate(12,h/2+20);x.rotate(-Math.PI/2);x.fillText('Density',0,0);x.restore();
 x.save();x.beginPath();x.rect(L,T,w-L-Rr,h-B-T);x.clip();
@@ -92,13 +97,36 @@ x.restore();
 ({x,w,h}=setup($('c2')));const T2=16,B2=30;
 const X2=v=>L+v/G*(w-L-Rr),Y2=v=>h-B2-(v-100)/150*(h-B2-T2);
 x.font='12px system-ui';x.strokeStyle=col.line;x.fillStyle=col.mut;x.lineWidth=1;
-for(let v=100;v<=250;v+=50){x.beginPath();x.moveTo(L,Y2(v));x.lineTo(w-Rr,Y2(v));x.stroke();x.fillText(v,8,Y2(v)+4)}
+for(let v=100;v<=250;v+=50){x.beginPath();x.moveTo(L,Y2(v));x.lineTo(w-Rr,Y2(v));x.stroke();x.fillText(v,L-6-x.measureText(''+v).width,Y2(v)+4)}
 for(let k=0;k<=G;k++)x.fillText(k,X2(k)-3,h-B2+16);
 x.fillText('Generation',w/2-25,h-4);x.fillText('Trait mean',L+4,11);
 x.save();x.beginPath();x.rect(L,T2-4,w-L-Rr,h-B2-T2+8);x.clip();
 x.strokeStyle=col.off;x.lineWidth=2;x.beginPath();for(let k=0;k<=G;k++){const m=MU0+k*R;k?x.lineTo(X2(k),Y2(m)):x.moveTo(X2(k),Y2(m))}x.stroke();
 for(let k=0;k<=G;k++){x.beginPath();x.arc(X2(k),Y2(MU0+k*R),k===g?6:3,0,7);x.fillStyle=k===g?col.sel:col.off;x.fill()}
 x.restore();
+// Panel 3: regression offspring mean on mid-parent
+({x,w,h}=setup($('c3')));const T3=26,B3=38,LO=60,HI=280;
+const X3=v=>L+(v-LO)/(HI-LO)*(w-L-Rr),Y3=v=>h-B3-(v-LO)/(HI-LO)*(h-B3-T3);
+x.font='12px system-ui';x.strokeStyle=col.line;x.fillStyle=col.mut;x.lineWidth=1;
+for(let v=100;v<=250;v+=50){x.beginPath();x.moveTo(L,Y3(v));x.lineTo(w-Rr,Y3(v));x.stroke();x.fillText(v,L-6-x.measureText(''+v).width,Y3(v)+4);x.fillText(v,X3(v)-8,h-B3+16)}
+x.fillText('Mid-parent mean (phenotypic value)',(w)/2-70,h-6);
+x.save();x.translate(12,h/2+50);x.rotate(-Math.PI/2);x.fillText('Offspring mean',0,0);x.restore();
+x.save();x.beginPath();x.rect(L,T3-6,w-L-Rr,h-B3-T3+6);x.clip();
+x.strokeStyle=col.mut;x.setLineDash([4,4]);x.beginPath();x.moveTo(X3(LO),Y3(LO));x.lineTo(X3(HI),Y3(HI));x.stroke();x.setLineDash([]);
+const N=ZP.length,sdMP=sd/Math.SQRT2,sdE=sd*Math.sqrt((1-h2/2)/10);
+const px=[],py=[];
+for(let k=0;k<N;k++){const mp=mu+sdMP*ZP[k];px.push(mp);py.push(mu+h2*(mp-mu)+sdE*ZE[k])}
+x.globalAlpha=.8;
+for(const sel of [false,true]){x.fillStyle=sel?col.sel:col.off;for(let k=0;k<N;k++){if((px[k]>=th)!==sel)continue;x.beginPath();x.arc(X3(px[k]),Y3(py[k]),sel?4.2:3.2,0,7);x.fill()}}
+x.globalAlpha=1;
+const mx=px.reduce((a,b)=>a+b)/N,my=py.reduce((a,b)=>a+b)/N;
+let sxy=0,sxx=0;for(let k=0;k<N;k++){sxy+=(px[k]-mx)*(py[k]-my);sxx+=(px[k]-mx)**2}
+const b=sxy/sxx,a0=my-b*mx;
+x.strokeStyle=col.sel;x.lineWidth=2;x.beginPath();x.moveTo(X3(LO),Y3(a0+b*LO));x.lineTo(X3(HI),Y3(a0+b*HI));x.stroke();
+x.restore();
+const lg=(c,t,xx)=>{x.fillStyle=c;x.beginPath();x.arc(xx,T3-12,4.5,0,7);x.fill();x.fillStyle=col.mut;x.font='12px system-ui';x.fillText(t,xx+8,T3-8);return xx+16+x.measureText(t).width};
+{const w1=x.measureText('Selected').width,w2=x.measureText('Not selected').width;let xx=w-Rr-(w1+w2+40);xx=lg(col.sel,'Selected',xx)+6;lg(col.off,'Not selected',xx)}
+x.fillStyle=col.sel;x.font='13px system-ui';x.fillText('Slope b = '+b.toFixed(2)+'   (h² = '+h2.toFixed(2)+')',L+8,T3-8);
 }
 ['h','p','s','g'].forEach(k=>$(k).addEventListener('input',draw));
 addEventListener('resize',draw);matchMedia('(prefers-color-scheme:dark)').addEventListener('change',draw);draw();
