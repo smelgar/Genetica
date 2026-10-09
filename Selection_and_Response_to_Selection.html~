@@ -33,9 +33,9 @@ canvas{width:100%;display:block}
 <div class="card">
 <label>Heritability h² <b id="vh"></b></label><input id="h" type="range" min="0" max="1" step="0.05" value="0.5">
 <label>Proportion selected p <b id="vp"></b></label><input id="p" type="range" min="1" max="99" step="1" value="20">
-<label>Phenotypic standard deviation &sigma;<sub>P</sub> <b id="vs"></b></label><input id="s" type="range" min="5" max="10" step="1" value="10">
+<label>Phenotypic standard deviation σP <b id="vs"></b></label><input id="s" type="range" min="5" max="10" step="1" value="10">
 <label>Generation shown <b id="vg"></b></label><input id="g" type="range" min="0" max="5" step="1" value="0">
-<div class="eq">Initial mean μ₀ = 100.<br>Breeder's equation:<br><b>R = h² · S</b>, with S = i · &sigma;<sub>P</sub><br>(h² and &sigma;<sub>P</sub> constant across generations).</div>
+<div class="eq">Initial mean μ₀ = 100.<br>Breeder's equation:<br><b>R = h² · S</b>, with S = i · σP<br>(h² and σP constant across generations).</div>
 </div>
 <div class="card">
 <canvas id="c1"></canvas>
