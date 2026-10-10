@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<!-- saved from url=(0126)file:///home/smelgar/Descargas/Simulaci%C3%B3n%20de%20retrocruzas_%20introgresi%C3%B3n%20de%20un%20gen%20de%20resistencia.html -->
+<html lang="es"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Simulación de retrocruzas: introgresión de un gen de resistencia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com/">
+<link href="./Simulación_de_retrocruces_introgresión_gen_de_resistencia_files/css2" rel="stylesheet">
+<style>
+:root{
+  --bg:#eef1ee; --surface:#f8faf8; --ink:#14231c; --muted:#56675e; --line:#cfd8d2;
+  --elite:#1b6b57; --donor:#c2185b; --elite-soft:#d9ebe5;
+  --head:'Bricolage Grotesque',Georgia,'Times New Roman',serif;
+  --body:'Public Sans',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0f1713; --surface:#16211b; --ink:#e6efe9; --muted:#93a79b; --line:#2a3a31;
+    --elite:#3fb596; --donor:#ec5b94; --elite-soft:#1c3128;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0f1713; --surface:#16211b; --ink:#e6efe9; --muted:#93a79b; --line:#2a3a31;
+  --elite:#3fb596; --donor:#ec5b94; --elite-soft:#1c3128;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5}
+.wrap{max-width:1120px;margin:0 auto;padding:28px 20px 56px}
+h1{font-family:var(--head);font-weight:700;font-size:clamp(1.7rem,4.2vw,2.6rem);line-height:1.1;margin:0 0 10px;letter-spacing:-.01em}
+.lede{max-width:68ch;color:var(--muted);margin:0 0 26px}
+.layout{display:grid;grid-template-columns:290px minmax(0,1fr);gap:22px;align-items:start}
+@media (max-width:860px){.layout{grid-template-columns:1fr}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px}
+.panel h2{font-family:var(--head);font-size:1.1rem;margin:0 0 14px;font-weight:700}
+.field{margin-bottom:16px}
+.field label{display:flex;justify-content:space-between;font-size:.9rem;font-weight:500;margin-bottom:6px}
+.field output{font-variant-numeric:tabular-nums;color:var(--elite);font-weight:600}
+input[type=range]{width:100%;accent-color:var(--elite)}
+.check{display:flex;gap:10px;align-items:flex-start;font-size:.9rem;margin-bottom:6px}
+.check input{margin-top:4px;accent-color:var(--elite);width:16px;height:16px}
+.hint{font-size:.8rem;color:var(--muted);margin:0 0 16px 26px}
+.btns{display:grid;gap:8px;margin-top:6px}
+button{font:inherit;font-weight:600;border-radius:8px;padding:10px 14px;cursor:pointer;border:1px solid var(--elite)}
+button.primary{background:var(--elite);color:var(--surface)}
+button.ghost{background:transparent;color:var(--elite)}
+button:disabled{opacity:.45;cursor:not-allowed}
+button:focus-visible,input:focus-visible{outline:3px solid var(--donor);outline-offset:2px}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:.85rem;color:var(--muted);margin:0 0 14px}
+.legend i{display:inline-block;width:14px;height:10px;border-radius:2px;vertical-align:-1px;margin-right:6px}
+.legend .gene{width:2px;height:14px;background:var(--ink);border-radius:0;vertical-align:-3px}
+
+.matrix{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px 18px 8px;margin-bottom:22px}
+.mhead,.mrow{display:grid;grid-template-columns:54px minmax(0,1fr) 96px 78px 78px 78px;gap:12px;align-items:center}
+.mhead{font-size:.78rem;color:var(--muted);padding-bottom:8px;border-bottom:1px solid var(--line)}
+.mhead .chrs{display:grid;grid-template-columns:repeat(10,1fr);text-align:center}
+.mhead .num,.mrow .num{text-align:right}
+.mrow{padding:10px 0;border-bottom:1px solid var(--line);animation:enter .35s ease-out}
+.mrow:last-child{border-bottom:0}
+@keyframes enter{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+.glabel{font-family:var(--head);font-weight:700;font-size:1.05rem}
+.mrow svg{width:100%;height:auto;display:block}
+.big{font-family:var(--head);font-weight:700;font-size:1.45rem;color:var(--elite);font-variant-numeric:tabular-nums;text-align:right}
+.small{font-size:.9rem;font-variant-numeric:tabular-nums;text-align:right;color:var(--muted)}
+.cols-label{display:none}
+@media (max-width:720px){
+  .mhead{display:none}
+  .mrow{grid-template-columns:54px 1fr auto;grid-template-areas:"g . p" "i i i" "a b c";row-gap:8px}
+  .mrow .glabel{grid-area:g}.mrow .big{grid-area:p}.mrow .ideo{grid-area:i}
+  .mrow .s1{grid-area:a;text-align:left}.mrow .s2{grid-area:b;text-align:center}.mrow .s3{grid-area:c}
+  .cols-label{display:block;font-size:.7rem;color:var(--muted)}
+}
+
+.chartbox{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px;margin-bottom:22px}
+.chartbox h2{font-family:var(--head);font-size:1.1rem;margin:0 0 4px}
+.chartbox p{margin:0 0 10px;color:var(--muted);font-size:.9rem}
+.chartbox svg{width:100%;height:auto;display:block}
+.ax{stroke:var(--line);stroke-width:1}
+.tick{fill:var(--muted);font-size:11px;font-family:var(--body)}
+.ln-sel{fill:none;stroke:var(--elite);stroke-width:3}
+.ln-mean{fill:none;stroke:var(--donor);stroke-width:2}
+.ln-theo{fill:none;stroke:var(--muted);stroke-width:2;stroke-dasharray:5 5}
+.dot-sel{fill:var(--elite)}.dot-mean{fill:var(--donor)}
+.lbl{fill:var(--elite);font-weight:700;font-size:13px;font-family:var(--head)}
+.notes{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:22px}
+.notes .panel p{margin:0 0 8px;font-size:.92rem}
+.notes .panel p:last-child{margin:0}
+.status{font-size:.9rem;color:var(--muted);margin:12px 0 0;min-height:1.4em}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Retrocruzas para pasar un gen de resistencia a una variedad élite</h1>
+  <p class="lede">Una planta donante lleva el gen de resistencia pero tiene un genoma poco deseable. Se cruza con la variedad élite (parental recurrente) y, en cada retrocruza, se eligen las plantas que conservan el gen. Observa cómo sube el porcentaje de genoma élite generación tras generación.</p>
+
+  <div class="layout">
+    <aside class="panel" aria-label="Parámetros">
+      <h2>Parámetros</h2>
+      <div class="field">
+        <label for="gens">Retrocruzas a realizar <output id="o-gens">6</output></label>
+        <input type="range" id="gens" min="2" max="10" value="6">
+      </div>
+      <div class="field">
+        <label for="nprog">Plantas por generación <output id="o-nprog">60</output></label>
+        <input type="range" id="nprog" min="10" max="300" step="10" value="60">
+      </div>
+      <div class="field">
+        <label for="cm">Longitud de cromosoma (cM) <output id="o-cm">100</output></label>
+        <input type="range" id="cm" min="50" max="150" step="10" value="100">
+      </div>
+      <div class="check">
+        <input type="checkbox" id="bg">
+        <label for="bg">Selección de fondo con marcadores</label>
+      </div>
+      <p class="hint">Si está activada, de las plantas portadoras se elige la que tiene menos genoma donante. Si no, se elige una portadora al azar.</p>
+      <div class="btns">
+        <button class="primary" id="step" disabled="">Siguiente retrocruza</button>
+        <button class="ghost" id="all" disabled="">Simular todas</button>
+        <button class="primary" id="self" disabled="">Autofecundar (obtener RR)</button>
+        <button class="ghost" id="reset">Reiniciar</button>
+      </div>
+      <p class="status" id="status" role="status">Autofecundación de 60 plantas: 16 RR, 29 Rr y 15 rr (esperado 25 / 50 / 25 %). Se eligió una planta RR.</p>
+    </aside>
+
+    <main>
+      <div class="legend">
+        <span><i style="background:var(--elite)"></i>Genoma élite</span>
+        <span><i style="background:var(--donor)"></i>Genoma donante</span>
+        <span><i class="gene"></i>Gen de resistencia (cromosoma 1)</span>
+      </div>
+
+      <section class="matrix" aria-label="Genoma de la planta seleccionada en cada generación">
+        <div class="mhead">
+          <span>Gen.</span>
+          <div class="chrs" aria-hidden="true"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span></div>
+          <span class="num">% élite (elegida)</span>
+          <span class="num">Media portadoras</span>
+          <span class="num">Esperado</span>
+          <span class="num">Arrastre</span>
+        </div>
+        <div id="rows"><div class="mrow"><span class="glabel">F1</span><div class="ideo"><svg viewBox="0 0 1000 40" aria-hidden="true"><rect x="6" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="6" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="6.00" y="3" width="88.00" height="14" fill="var(--donor)" rx="3"></rect><rect x="31.34" y="0" width="3" height="40" fill="var(--ink)"></rect><rect x="106" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="106" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="106.00" y="3" width="88.00" height="14" fill="var(--donor)" rx="3"></rect><rect x="206" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="206" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="206.00" y="3" width="88.00" height="14" fill="var(--donor)" rx="3"></rect><rect x="306" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="306" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="306.00" y="3" width="88.00" height="14" fill="var(--donor)" rx="3"></rect><rect x="406" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="406" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="406.00" y="3" width="88.00" height="14" fill="var(--donor)" rx="3"></rect><rect x="506" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="506" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="506.00" y="3" width="88.00" height="14" fill="var(--donor)" rx="3"></rect><rect x="606" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="606" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="606.00" y="3" width="88.00" height="14" fill="var(--donor)" rx="3"></rect><rect x="706" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="706" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="706.00" y="3" width="88.00" height="14" fill="var(--donor)" rx="3"></rect><rect x="806" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="806" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="806.00" y="3" width="88.00" height="14" fill="var(--donor)" rx="3"></rect><rect x="906" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="906" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="906.00" y="3" width="88.00" height="14" fill="var(--donor)" rx="3"></rect></svg></div><span class="big">50,0 %</span><span class="small s1"><span class="cols-label">Media portadoras</span>—</span><span class="small s2"><span class="cols-label">Esperado</span>50,0 %</span><span class="small s3"><span class="cols-label">Arrastre</span>—</span></div><div class="mrow"><span class="glabel">RC1</span><div class="ideo"><svg viewBox="0 0 1000 40" aria-hidden="true"><rect x="6" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="6" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="6.00" y="3" width="49.28" height="14" fill="var(--donor)" rx="3"></rect><rect x="31.34" y="0" width="3" height="40" fill="var(--ink)"></rect><rect x="106" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="106" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="179.92" y="3" width="7.04" height="14" fill="var(--donor)"></rect><rect x="206" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="206" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="206.00" y="3" width="44.88" height="14" fill="var(--donor)" rx="3"></rect><rect x="256.16" y="3" width="37.84" height="14" fill="var(--donor)"></rect><rect x="306" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="306" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="406" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="406" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="406.00" y="3" width="60.72" height="14" fill="var(--donor)" rx="3"></rect><rect x="484.32" y="3" width="9.68" height="14" fill="var(--donor)"></rect><rect x="506" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="506" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="606" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="606" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="623.60" y="3" width="70.40" height="14" fill="var(--donor)"></rect><rect x="706" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="706" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="706.00" y="3" width="22.88" height="14" fill="var(--donor)" rx="3"></rect><rect x="806" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="806" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="891.36" y="3" width="2.64" height="14" fill="var(--donor)"></rect><rect x="906" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="906" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="906.00" y="3" width="88.00" height="14" fill="var(--donor)" rx="3"></rect></svg></div><span class="big">77,7 %</span><span class="small s1"><span class="cols-label">Media portadoras</span>72,3 %</span><span class="small s2"><span class="cols-label">Esperado</span>75,0 %</span><span class="small s3"><span class="cols-label">Arrastre</span>56,0 cM</span></div><div class="mrow"><span class="glabel">RC2</span><div class="ideo"><svg viewBox="0 0 1000 40" aria-hidden="true"><rect x="6" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="6" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="6.00" y="3" width="49.28" height="14" fill="var(--donor)" rx="3"></rect><rect x="31.34" y="0" width="3" height="40" fill="var(--ink)"></rect><rect x="106" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="106" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="179.92" y="3" width="7.04" height="14" fill="var(--donor)"></rect><rect x="206" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="206" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="206.00" y="3" width="44.88" height="14" fill="var(--donor)" rx="3"></rect><rect x="256.16" y="3" width="37.84" height="14" fill="var(--donor)"></rect><rect x="306" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="306" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="406" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="406" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="406.00" y="3" width="60.72" height="14" fill="var(--donor)" rx="3"></rect><rect x="484.32" y="3" width="9.68" height="14" fill="var(--donor)"></rect><rect x="506" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="506" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="606" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="606" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="706" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="706" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="706.00" y="3" width="22.88" height="14" fill="var(--donor)" rx="3"></rect><rect x="806" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="806" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="906" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="906" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="906.00" y="3" width="88.00" height="14" fill="var(--donor)" rx="3"></rect></svg></div><span class="big">81,8 %</span><span class="small s1"><span class="cols-label">Media portadoras</span>87,8 %</span><span class="small s2"><span class="cols-label">Esperado</span>87,5 %</span><span class="small s3"><span class="cols-label">Arrastre</span>56,0 cM</span></div><div class="mrow"><span class="glabel">RC3</span><div class="ideo"><svg viewBox="0 0 1000 40" aria-hidden="true"><rect x="6" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="6" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="6.00" y="3" width="49.28" height="14" fill="var(--donor)" rx="3"></rect><rect x="31.34" y="0" width="3" height="40" fill="var(--ink)"></rect><rect x="106" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="106" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="179.92" y="3" width="7.04" height="14" fill="var(--donor)"></rect><rect x="206" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="206" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="207.76" y="3" width="43.12" height="14" fill="var(--donor)"></rect><rect x="256.16" y="3" width="37.84" height="14" fill="var(--donor)"></rect><rect x="306" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="306" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="406" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="406" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="406.00" y="3" width="60.72" height="14" fill="var(--donor)" rx="3"></rect><rect x="484.32" y="3" width="9.68" height="14" fill="var(--donor)"></rect><rect x="506" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="506" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="606" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="606" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="706" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="706" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="806" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="806" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="906" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="906" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="963.20" y="3" width="30.80" height="14" fill="var(--donor)"></rect></svg></div><span class="big">86,5 %</span><span class="small s1"><span class="cols-label">Media portadoras</span>89,6 %</span><span class="small s2"><span class="cols-label">Esperado</span>93,8 %</span><span class="small s3"><span class="cols-label">Arrastre</span>56,0 cM</span></div><div class="mrow"><span class="glabel">RC4</span><div class="ideo"><svg viewBox="0 0 1000 40" aria-hidden="true"><rect x="6" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="6" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="22.72" y="3" width="32.56" height="14" fill="var(--donor)"></rect><rect x="31.34" y="0" width="3" height="40" fill="var(--ink)"></rect><rect x="106" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="106" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="179.92" y="3" width="7.04" height="14" fill="var(--donor)"></rect><rect x="206" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="206" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="207.76" y="3" width="43.12" height="14" fill="var(--donor)"></rect><rect x="256.16" y="3" width="37.84" height="14" fill="var(--donor)"></rect><rect x="306" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="306" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="406" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="406" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="406.00" y="3" width="40.48" height="14" fill="var(--donor)" rx="3"></rect><rect x="506" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="506" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="606" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="606" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="706" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="706" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="806" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="806" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="906" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="906" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="963.20" y="3" width="30.80" height="14" fill="var(--donor)"></rect></svg></div><span class="big">89,1 %</span><span class="small s1"><span class="cols-label">Media portadoras</span>92,8 %</span><span class="small s2"><span class="cols-label">Esperado</span>96,9 %</span><span class="small s3"><span class="cols-label">Arrastre</span>37,0 cM</span></div><div class="mrow"><span class="glabel">RC5</span><div class="ideo"><svg viewBox="0 0 1000 40" aria-hidden="true"><rect x="6" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="6" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="22.72" y="3" width="32.56" height="14" fill="var(--donor)"></rect><rect x="31.34" y="0" width="3" height="40" fill="var(--ink)"></rect><rect x="106" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="106" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="179.92" y="3" width="7.04" height="14" fill="var(--donor)"></rect><rect x="206" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="206" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="207.76" y="3" width="43.12" height="14" fill="var(--donor)"></rect><rect x="256.16" y="3" width="37.84" height="14" fill="var(--donor)"></rect><rect x="306" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="306" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="406" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="406" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="506" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="506" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="606" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="606" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="706" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="706" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="806" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="806" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="906" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="906" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="963.20" y="3" width="30.80" height="14" fill="var(--donor)"></rect></svg></div><span class="big">91,4 %</span><span class="small s1"><span class="cols-label">Media portadoras</span>93,4 %</span><span class="small s2"><span class="cols-label">Esperado</span>98,4 %</span><span class="small s3"><span class="cols-label">Arrastre</span>37,0 cM</span></div><div class="mrow"><span class="glabel">RC6</span><div class="ideo"><svg viewBox="0 0 1000 40" aria-hidden="true"><rect x="6" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="6" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="22.72" y="3" width="32.56" height="14" fill="var(--donor)"></rect><rect x="31.34" y="0" width="3" height="40" fill="var(--ink)"></rect><rect x="106" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="106" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="179.92" y="3" width="7.04" height="14" fill="var(--donor)"></rect><rect x="206" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="206" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="226.24" y="3" width="24.64" height="14" fill="var(--donor)"></rect><rect x="256.16" y="3" width="37.84" height="14" fill="var(--donor)"></rect><rect x="306" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="306" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="406" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="406" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="506" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="506" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="606" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="606" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="706" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="706" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="806" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="806" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="906" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="906" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="963.20" y="3" width="30.80" height="14" fill="var(--donor)"></rect></svg></div><span class="big">92,5 %</span><span class="small s1"><span class="cols-label">Media portadoras</span>95,3 %</span><span class="small s2"><span class="cols-label">Esperado</span>99,2 %</span><span class="small s3"><span class="cols-label">Arrastre</span>37,0 cM</span></div><div class="mrow"><span class="glabel">RR</span><div class="ideo"><svg viewBox="0 0 1000 40" aria-hidden="true"><rect x="6" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="6" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="23.60" y="3" width="31.68" height="14" fill="var(--donor)"></rect><rect x="31.52" y="23" width="23.76" height="14" fill="var(--donor)"></rect><rect x="31.34" y="0" width="3" height="40" fill="var(--ink)"></rect><rect x="106" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="106" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="179.92" y="23" width="7.04" height="14" fill="var(--donor)"></rect><rect x="206" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="206" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="306" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="306" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="406" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="406" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="506" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="506" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="606" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="606" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="706" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="706" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="806" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="806" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="906" y="3" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="906" y="23" width="88" height="14" rx="3" fill="var(--elite)"></rect><rect x="963.20" y="3" width="30.80" height="14" fill="var(--donor)"></rect><rect x="963.20" y="23" width="19.36" height="14" fill="var(--donor)"></rect></svg></div><span class="big">93,6 %</span><span class="small s1"><span class="cols-label">Media portadoras</span>91,0 %</span><span class="small s2"><span class="cols-label">Esperado</span>99,2 %</span><span class="small s3"><span class="cols-label">Arrastre</span>36,0 cM</span></div></div>
+      </section>
+
+      <section class="chartbox">
+        <h2>Genoma élite acumulado</h2>
+        <p>Porcentaje del genoma de la variedad élite recuperado en cada generación.</p>
+        <svg id="chart" viewBox="0 0 640 300" role="img" aria-label="Gráfico del porcentaje de genoma élite por generación"><line class="ax" x1="46" x2="596" y1="241.45454545454544" y2="241.45454545454544"></line><text class="tick" x="38" y="245.45454545454544" text-anchor="end">50 %</text><line class="ax" x1="46" x2="596" y1="196.36363636363637" y2="196.36363636363637"></line><text class="tick" x="38" y="200.36363636363637" text-anchor="end">60 %</text><line class="ax" x1="46" x2="596" y1="151.27272727272725" y2="151.27272727272725"></line><text class="tick" x="38" y="155.27272727272725" text-anchor="end">70 %</text><line class="ax" x1="46" x2="596" y1="106.18181818181819" y2="106.18181818181819"></line><text class="tick" x="38" y="110.18181818181819" text-anchor="end">80 %</text><line class="ax" x1="46" x2="596" y1="61.09090909090908" y2="61.09090909090908"></line><text class="tick" x="38" y="65.09090909090908" text-anchor="end">90 %</text><line class="ax" x1="46" x2="596" y1="16" y2="16"></line><text class="tick" x="38" y="20" text-anchor="end">100 %</text><text class="tick" x="46" y="286" text-anchor="middle">F1</text><text class="tick" x="124.57142857142857" y="286" text-anchor="middle">RC1</text><text class="tick" x="203.14285714285714" y="286" text-anchor="middle">RC2</text><text class="tick" x="281.7142857142857" y="286" text-anchor="middle">RC3</text><text class="tick" x="360.2857142857143" y="286" text-anchor="middle">RC4</text><text class="tick" x="438.85714285714283" y="286" text-anchor="middle">RC5</text><text class="tick" x="517.4285714285714" y="286" text-anchor="middle">RC6</text><text class="tick" x="596" y="286" text-anchor="middle">RR</text><polyline class="ln-theo" points="46,241.45454545454544 124.57142857142857,128.72727272727275 203.14285714285714,72.36363636363637 281.7142857142857,44.18181818181819 360.2857142857143,30.09090909090908 438.85714285714283,23.045454545454554 517.4285714285714,19.522727272727263 596,19.522727272727263"></polyline><polyline class="ln-mean" points="46,241.45454545454544 124.57142857142857,140.92834224598928 203.14285714285714,71.01896103896107 281.7142857142857,62.676606060606105 360.2857142857143,48.50432601880874 438.85714285714283,45.5418181818181 517.4285714285714,37.32534759358285 596,56.68045454545458"></polyline><polyline class="ln-sel" points="46,241.45454545454544 124.57142857142857,116.77818181818179 203.14285714285714,98.06545454545456 281.7142857142857,77.09818181818181 360.2857142857143,65.14909090909092 438.85714285714283,54.77818181818179 517.4285714285714,50.04363636363635 596,44.85818181818184"></polyline><circle class="dot-mean" cx="46" cy="241.45454545454544" r="3"></circle><circle class="dot-sel" cx="46" cy="241.45454545454544" r="4.5"></circle><circle class="dot-mean" cx="124.57142857142857" cy="140.92834224598928" r="3"></circle><circle class="dot-sel" cx="124.57142857142857" cy="116.77818181818179" r="4.5"></circle><circle class="dot-mean" cx="203.14285714285714" cy="71.01896103896107" r="3"></circle><circle class="dot-sel" cx="203.14285714285714" cy="98.06545454545456" r="4.5"></circle><circle class="dot-mean" cx="281.7142857142857" cy="62.676606060606105" r="3"></circle><circle class="dot-sel" cx="281.7142857142857" cy="77.09818181818181" r="4.5"></circle><circle class="dot-mean" cx="360.2857142857143" cy="48.50432601880874" r="3"></circle><circle class="dot-sel" cx="360.2857142857143" cy="65.14909090909092" r="4.5"></circle><circle class="dot-mean" cx="438.85714285714283" cy="45.5418181818181" r="3"></circle><circle class="dot-sel" cx="438.85714285714283" cy="54.77818181818179" r="4.5"></circle><circle class="dot-mean" cx="517.4285714285714" cy="37.32534759358285" r="3"></circle><circle class="dot-sel" cx="517.4285714285714" cy="50.04363636363635" r="4.5"></circle><circle class="dot-mean" cx="596" cy="56.68045454545458" r="3"></circle><circle class="dot-sel" cx="596" cy="44.85818181818184" r="4.5"></circle><text class="lbl" x="596" y="32.85818181818184" text-anchor="end">93,6 %</text></svg>
+        <div class="legend" style="margin:8px 0 0">
+          <span><i style="background:var(--elite)"></i>Planta elegida</span>
+          <span><i style="background:var(--donor)"></i>Media de portadoras</span>
+          <span><i style="background:var(--muted)"></i>Valor esperado: 1 − (½)<sup>n+1</sup></span>
+        </div>
+      </section>
+
+      <div class="notes">
+        <div class="panel">
+          <h2>Cómo funciona</h2>
+          <p>La F1 (donante × élite) tiene 50 % de genoma élite. Cada retrocruza con la élite aporta un juego completo de cromosomas élite, así que el genoma donante restante se reduce a la mitad en promedio.</p>
+          <p>En cada meiosis se simulan entrecruzamientos al azar. Solo se conservan las plantas que heredan el gen de resistencia (cerca de la mitad de la descendencia).</p>
+        </div>
+        <div class="panel">
+          <h2>Arrastre ligado</h2>
+          <p>La columna «Arrastre» mide el tamaño en cM del fragmento donante que rodea al gen. Como el gen siempre se selecciona, ese fragmento se acorta despacio y es la última parte del genoma donante en desaparecer.</p>
+          <p>Tras la última retrocruza, el botón «Autofecundar» cruza la planta elegida consigo misma. Cerca de 1/4 de la descendencia es homocigota RR, 1/2 es heterocigota (Rr) y 1/4 no tiene el gen. Se elige una planta RR y se muestran sus dos homólogos.</p>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+(function(){
+  var NC = 10, B = 100, GENE = 30;           // cromosomas, bins por cromosoma, posición del gen (cromosoma 1)
+  var $ = function(id){ return document.getElementById(id); };
+  var fmt = function(v){ return v.toLocaleString('es',{minimumFractionDigits:1,maximumFractionDigits:1}); };
+
+  var st = null;
+
+  function mulberry32(a){
+    return function(){
+      a |= 0; a = a + 0x6D2B79F5 | 0;
+      var t = Math.imul(a ^ a >>> 15, 1 | a);
+      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+  function poisson(l, rng){
+    var L = Math.exp(-l), k = 0, p = 1;
+    do { k++; p *= rng(); } while (p > L);
+    return k - 1;
+  }
+  // Gameto de un progenitor con homólogos hA y hB (0 = élite, 1 = donante)
+  function gamete(hA, hB, lam, rng){
+    var out = new Uint8Array(NC * B);
+    for (var c = 0; c < NC; c++){
+      var cur = rng() < 0.5 ? hA : hB;
+      var oth = cur === hA ? hB : hA;
+      var k = poisson(lam, rng), pos = [];
+      for (var i = 0; i < k; i++) pos.push(Math.floor(rng() * B));
+      pos.sort(function(a,b){return a-b;});
+      var pi = 0;
+      for (var b = 0; b < B; b++){
+        while (pi < pos.length && pos[pi] <= b){ var t = cur; cur = oth; oth = t; pi++; }
+        out[c*B + b] = cur[c*B + b];
+      }
+    }
+    return out;
+  }
+  function donorCount(g){ var s = 0; for (var i = 0; i < g.length; i++) s += g[i]; return s; }
+  function elitePct(g){ return 100 - donorCount(g) / (NC * B) * 50; }
+  function dragCM(g, cm){
+    var l = GENE, r = GENE;
+    while (l > 0 && g[l-1] === 1) l--;
+    while (r < B-1 && g[r+1] === 1) r++;
+    return (r - l + 1) * cm / B;
+  }
+
+  function params(){
+    return {
+      G: +$('gens').value, N: +$('nprog').value, cm: +$('cm').value, bg: $('bg').checked
+    };
+  }
+
+  function reset(){
+    var p = params();
+    var pA = new Uint8Array(NC * B).fill(1);
+    st = {
+      p: p, rng: mulberry32((Math.random() * 4294967296) >>> 0),
+      pA: pA, pB: new Uint8Array(NC * B),
+      gens: [{ label: 'F1', g: pA, sel: 50, mean: 50, theo: 50, drag: null, carriers: null, n: null }]
+    };
+    $('rows').innerHTML = '';
+    addRow(st.gens[0]);
+    update();
+  }
+
+  function stepOnce(){
+    if (st.gens.length - 1 >= st.p.G) return;
+    var p = st.p, lam = p.cm / 100, carriers = [], total = 0, tries = 0;
+    while (carriers.length === 0 && tries < 20){
+      for (var i = 0; i < p.N; i++){
+        var g = gamete(st.pA, st.pB, lam, st.rng);
+        total++;
+        if (g[GENE] === 1) carriers.push({ g: g, d: donorCount(g) });
+      }
+      tries++;
+    }
+    var chosen, mean = 0;
+    carriers.forEach(function(c){ mean += 100 - c.d / (NC*B) * 50; });
+    mean /= carriers.length;
+    if (p.bg){
+      chosen = carriers.reduce(function(a, b){ return b.d < a.d ? b : a; });
+    } else {
+      chosen = carriers[Math.floor(st.rng() * carriers.length)];
+    }
+    var n = st.gens.length;
+    var row = {
+      label: 'RC' + n, g: chosen.g, sel: elitePct(chosen.g), mean: mean,
+      theo: 100 - 100 * Math.pow(0.5, n + 1), drag: dragCM(chosen.g, p.cm),
+      carriers: carriers.length, n: p.N
+    };
+    st.pA = chosen.g; st.pB = new Uint8Array(NC * B);
+    st.gens.push(row);
+    addRow(row);
+    update();
+  }
+
+  function selfOnce(){
+    if (st.selfed || st.gens.length - 1 < st.p.G) return;
+    var p = st.p, lam = p.cm / 100, rr = [], Rr = 0, r0 = 0, total = 0, tries = 0;
+    while (rr.length === 0 && tries < 50){
+      for (var i = 0; i < p.N; i++){
+        var a = gamete(st.pA, st.pB, lam, st.rng), b = gamete(st.pA, st.pB, lam, st.rng);
+        var ca = a[GENE] === 1, cb = b[GENE] === 1;
+        total++;
+        if (ca && cb) rr.push({ a: a, b: b, d: donorCount(a) + donorCount(b) });
+        else if (ca || cb) Rr++;
+        else r0++;
+      }
+      tries++;
+    }
+    var eliteOf = function(c){ return 100 - c.d / (2 * NC * B) * 100; };
+    var mean = 0;
+    rr.forEach(function(c){ mean += eliteOf(c); });
+    mean /= rr.length;
+    var chosen = p.bg
+      ? rr.reduce(function(x, y){ return y.d < x.d ? y : x; })
+      : rr[Math.floor(st.rng() * rr.length)];
+    var last = st.gens[st.gens.length - 1];
+    var row = {
+      label: 'RR', g: chosen.a, g2: chosen.b, sel: eliteOf(chosen), mean: mean, theo: last.theo,
+      drag: Math.max(dragCM(chosen.a, p.cm), dragCM(chosen.b, p.cm)),
+      carriers: rr.length, n: total, self: { RR: rr.length, Rr: Rr, rr: r0 }
+    };
+    st.selfed = true;
+    st.gens.push(row);
+    addRow(row);
+    update();
+  }
+
+  // Ideograma: homólogo superior = el que lleva el gen; inferior = homólogo élite del parental recurrente
+  function ideogram(g, g2){
+    var s = '<svg viewBox="0 0 1000 40" aria-hidden="true">';
+    for (var c = 0; c < NC; c++){
+      var x0 = c * 100 + 6, w = 88, f = w / B;
+      s += '<rect x="'+x0+'" y="3" width="'+w+'" height="14" rx="3" fill="var(--elite)"/>';
+      s += '<rect x="'+x0+'" y="23" width="'+w+'" height="14" rx="3" fill="var(--elite)"/>';
+      [[g, 3], [g2, 23]].forEach(function(h){
+        if (!h[0]) return;
+        var b = 0;
+        while (b < B){
+          if (h[0][c*B + b] === 1){
+            var e = b;
+            while (e + 1 < B && h[0][c*B + e + 1] === 1) e++;
+            s += '<rect x="'+(x0 + b*f).toFixed(2)+'" y="'+h[1]+'" width="'+((e-b+1)*f).toFixed(2)+'" height="14" fill="var(--donor)"'+(b === 0 ? ' rx="3"' : '')+'/>';
+            b = e + 1;
+          } else b++;
+        }
+      });
+      if (c === 0){
+        var gx = x0 + GENE * f + f/2;
+        s += '<rect x="'+(gx-1.5).toFixed(2)+'" y="0" width="3" height="40" fill="var(--ink)"/>';
+      }
+    }
+    return s + '</svg>';
+  }
+
+  function addRow(r){
+    var d = document.createElement('div');
+    d.className = 'mrow';
+    d.innerHTML =
+      '<span class="glabel">'+r.label+'</span>' +
+      '<div class="ideo">'+ideogram(r.g, r.g2)+'</div>' +
+      '<span class="big">'+fmt(r.sel)+' %</span>' +
+      '<span class="small s1"><span class="cols-label">Media portadoras</span>'+(r.carriers ? fmt(r.mean)+' %' : '—')+'</span>' +
+      '<span class="small s2"><span class="cols-label">Esperado</span>'+fmt(r.theo)+' %</span>' +
+      '<span class="small s3"><span class="cols-label">Arrastre</span>'+(r.drag !== null ? fmt(r.drag)+' cM' : '—')+'</span>';
+    $('rows').appendChild(d);
+  }
+
+  function chart(){
+    var Gb = st.p.G, G = Gb + 1, W = 640, H = 300, L = 46, R = 44, T = 16, Bt = 36;
+    var yMin = 45, yMax = 100;
+    var X = function(i){ return L + (W - L - R) * i / G; };
+    var Y = function(v){ return T + (H - T - Bt) * (1 - (v - yMin) / (yMax - yMin)); };
+    var s = '';
+    for (var v = 50; v <= 100; v += 10){
+      s += '<line class="ax" x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(v)+'" y2="'+Y(v)+'"/>';
+      s += '<text class="tick" x="'+(L-8)+'" y="'+(Y(v)+4)+'" text-anchor="end">'+v+' %</text>';
+    }
+    for (var i = 0; i <= G; i++){
+      s += '<text class="tick" x="'+X(i)+'" y="'+(H-14)+'" text-anchor="middle">'+(i === 0 ? 'F1' : i > Gb ? 'RR' : 'RC'+i)+'</text>';
+    }
+    var theo = [];
+    for (i = 0; i <= G; i++) theo.push(X(i)+','+Y(100 - 100*Math.pow(0.5, Math.min(i, Gb)+1)));
+    s += '<polyline class="ln-theo" points="'+theo.join(' ')+'"/>';
+    var pm = [], ps = [];
+    st.gens.forEach(function(r, i){ pm.push(X(i)+','+Y(r.mean)); ps.push(X(i)+','+Y(r.sel)); });
+    s += '<polyline class="ln-mean" points="'+pm.join(' ')+'"/>';
+    s += '<polyline class="ln-sel" points="'+ps.join(' ')+'"/>';
+    st.gens.forEach(function(r, i){
+      s += '<circle class="dot-mean" cx="'+X(i)+'" cy="'+Y(r.mean)+'" r="3"/>';
+      s += '<circle class="dot-sel" cx="'+X(i)+'" cy="'+Y(r.sel)+'" r="4.5"/>';
+    });
+    var last = st.gens[st.gens.length - 1], li = st.gens.length - 1;
+    s += '<text class="lbl" x="'+(X(li))+'" y="'+(Y(last.sel)-12)+'" text-anchor="'+(li === G ? 'end' : 'middle')+'">'+fmt(last.sel)+' %</text>';
+    $('chart').innerHTML = s;
+  }
+
+  function update(){
+    var done = st.gens.length - 1 >= st.p.G;
+    $('step').disabled = done;
+    $('all').disabled = done;
+    $('self').disabled = !done || !!st.selfed;
+    var last = st.gens[st.gens.length - 1];
+    if (st.gens.length === 1){
+      $('status').textContent = 'Parte de la F1 (50 % élite). Avanza para hacer la primera retrocruza.';
+    } else {
+      if (last.self){
+        $('status').textContent = 'Autofecundación de ' + last.n + ' plantas: ' + last.self.RR + ' RR, ' +
+          last.self.Rr + ' Rr y ' + last.self.rr + ' rr (esperado 25 / 50 / 25 %). Se eligió una planta RR.';
+      } else {
+        $('status').textContent = last.label + ': ' + last.carriers + ' de ' + last.n + ' plantas portadoras del gen. ' +
+          (done ? 'Ya puedes autofecundar la última retrocruza para obtener plantas RR.' : '');
+      }
+    }
+    chart();
+    var rows = $('rows'); 
+    if (rows.lastElementChild) rows.lastElementChild.scrollIntoView({block:'nearest', behavior:'smooth'});
+  }
+
+  ['gens','nprog','cm'].forEach(function(id){
+    $(id).addEventListener('input', function(){ $('o-'+id).textContent = $(id).value; reset(); });
+  });
+  $('bg').addEventListener('change', reset);
+  $('step').addEventListener('click', stepOnce);
+  $('all').addEventListener('click', function(){ while (st.gens.length - 1 < st.p.G) stepOnce(); });
+  $('self').addEventListener('click', selfOnce);
+  $('reset').addEventListener('click', reset);
+
+  reset();
+})();
+</script>
+
+
+</body></html>
