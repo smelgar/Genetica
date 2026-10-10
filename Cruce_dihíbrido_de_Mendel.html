@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cruce dihíbrido de Mendel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@400;600;700&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  --bg:#EDF1F0;
+  --panel:#F8FAF9;
+  --ink:#16302B;
+  --muted:#5B706B;
+  --line:#C9D5D2;
+  --accent:#2F7D5B;
+  --hl:#F2C94C;
+  --yellow:#E8B41C;
+  --green:#5C9A3A;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F1C19;--panel:#162824;--ink:#E3EEEA;--muted:#93A9A3;--line:#2A423D;
+    --accent:#5FBF92;--hl:#E5B93A;--yellow:#F0C43A;--green:#7BBF55;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F1C19;--panel:#162824;--ink:#E3EEEA;--muted:#93A9A3;--line:#2A423D;
+  --accent:#5FBF92;--hl:#E5B93A;--yellow:#F0C43A;--green:#7BBF55;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Source Serif 4",Georgia,"Times New Roman",serif;font-size:17px;line-height:1.6}
+h1,h2,h3,button,select,.ui{font-family:"Familjen Grotesk","Helvetica Neue",Arial,sans-serif}
+.wrap{max-width:1120px;margin:0 auto;padding:28px 18px 48px}
+header{display:flex;gap:18px;align-items:center;margin-bottom:26px}
+header .logo{flex:none;display:flex;gap:2px}
+header .logo svg{width:38px;height:38px}
+h1{font-size:clamp(28px,5vw,44px);line-height:1.05;margin:0 0 6px;font-weight:700;letter-spacing:-.02em}
+header p{margin:0;color:var(--muted);max-width:62ch}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
+@media (max-width:860px){.grid{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px}
+.panel.full{grid-column:1/-1}
+h2{font-size:20px;margin:0 0 4px;font-weight:600}
+h3{font-size:16px;margin:0 0 10px;font-weight:600}
+.sub{margin:0 0 14px;color:var(--muted);font-size:15px}
+.presets{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
+button{font-size:15px;font-weight:600;color:var(--ink);background:transparent;border:1.5px solid var(--line);border-radius:999px;padding:8px 15px;cursor:pointer;transition:background .15s,border-color .15s}
+button:hover{border-color:var(--accent)}
+button:focus-visible,select:focus-visible{outline:3px solid var(--hl);outline-offset:2px}
+button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+button.primary:hover{filter:brightness(1.08)}
+.parents{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:start}
+.parents .x{font-size:26px;color:var(--muted);padding-top:30px;font-family:"Familjen Grotesk",sans-serif}
+@media (max-width:520px){.parents{grid-template-columns:1fr}.parents .x{padding:0;text-align:center}}
+.pt{font-family:"Familjen Grotesk",sans-serif;font-weight:600;font-size:15px;margin-bottom:6px}
+label.p{display:block;font-family:"Familjen Grotesk",sans-serif;font-size:13px;color:var(--muted);margin:8px 0 3px}
+select{width:100%;font-size:15px;padding:8px 9px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink)}
+.gen{margin-top:10px;font-family:"Familjen Grotesk",sans-serif;font-size:22px;font-weight:700;letter-spacing:.03em}
+.gen small{display:block;font-size:13px;font-weight:400;color:var(--muted);letter-spacing:0}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:14px;color:var(--muted);margin-top:16px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend svg{width:22px;height:22px}
+.yel{color:var(--yellow)}
+.grn{color:var(--green)}
+
+/* Punnett */
+.punnett{display:grid;grid-template-columns:auto repeat(4,minmax(0,1fr));gap:5px;max-width:520px;margin:6px auto 0}
+.punnett .h{display:grid;place-items:center;font-family:"Familjen Grotesk",sans-serif;font-weight:700;font-size:14px;min-height:30px}
+.punnett .h span{padding:3px 8px;border-radius:999px;border:1.5px solid var(--ink);background:var(--bg)}
+.cell{aspect-ratio:1;border-radius:8px;border:1.5px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;background:var(--bg);transition:background .2s,border-color .2s,transform .2s;min-width:0}
+.cell b{font-family:"Familjen Grotesk",sans-serif;font-size:clamp(10px,2.4vw,14px);letter-spacing:.01em}
+.cell svg{width:clamp(16px,4.5vw,26px);height:clamp(16px,4.5vw,26px)}
+.cell.hit{border-color:var(--hl);background:color-mix(in srgb,var(--hl) 28%,var(--bg));transform:scale(1.05)}
+.expect{margin:16px 0 0;text-align:center;font-size:15px}
+.expect strong{font-family:"Familjen Grotesk",sans-serif}
+
+/* Simulación */
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.total{font-family:"Familjen Grotesk",sans-serif;font-size:15px;color:var(--muted);margin-left:auto;align-self:center}
+.total b{color:var(--ink);font-size:20px}
+.bars{display:grid;gap:8px}
+.bar{display:grid;grid-template-columns:118px 1fr;gap:10px;align-items:center;font-family:"Familjen Grotesk",sans-serif;font-size:14px}
+.bar.g{grid-template-columns:58px 1fr}
+.bar .lab{display:flex;align-items:center;gap:6px}
+.bar .lab svg{width:20px;height:20px;flex:none}
+.bar .track{position:relative;height:24px;background:var(--bg);border-radius:7px;border:1px solid var(--line)}
+.bar .fill{position:absolute;inset:0 auto 0 0;width:0;border-radius:6px;transition:width .35s ease}
+.bar .tick{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--ink);opacity:.75}
+.bar .val{position:absolute;left:8px;top:50%;transform:translateY(-50%);font-size:12.5px;font-weight:600;color:var(--ink);white-space:nowrap;text-shadow:0 0 4px var(--bg),0 0 4px var(--bg)}
+.sep{height:1px;background:var(--line);margin:14px 0}
+.note{font-size:14px;color:var(--muted);margin:10px 0 0}
+.ratio{margin-top:14px;display:grid;gap:10px}
+.ratio div{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--bg)}
+.ratio small{display:block;font-family:"Familjen Grotesk",sans-serif;font-size:13px;color:var(--muted)}
+.ratio strong{font-family:"Familjen Grotesk",sans-serif;font-size:21px;white-space:nowrap}
+.field{display:flex;flex-wrap:wrap;gap:4px;max-height:170px;overflow:auto;padding:6px;border-radius:10px;background:var(--bg);border:1px solid var(--line);min-height:56px;align-content:flex-start}
+.field svg{width:22px;height:22px;flex:none}
+.empty{color:var(--muted);font-size:15px;padding:6px}
+.marg{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+@media (max-width:420px){.marg{grid-template-columns:1fr}}
+.explain{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;font-size:16px}
+@media (max-width:860px){.explain{grid-template-columns:1fr}}
+.explain h3{font-size:17px;margin:0 0 4px}
+.explain p{margin:0}
+.theme{margin-left:auto;align-self:flex-start}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="round" viewBox="0 0 40 40">
+      <circle cx="20" cy="20" r="16" fill="currentColor"/>
+      <circle cx="20" cy="20" r="16" fill="none" stroke="#000" stroke-opacity=".18" stroke-width="1.5"/>
+      <ellipse cx="14" cy="13.5" rx="5" ry="3.2" fill="#fff" fill-opacity=".4" transform="rotate(-30 14 13.5)"/>
+    </symbol>
+    <symbol id="wrinkled" viewBox="0 0 40 40">
+      <path d="M20 4 Q26 6 30 5 Q34 11 36 17 Q33 22 36 27 Q31 33 27 35 Q21 32 15 36 Q9 32 5 27 Q8 21 4 15 Q9 9 13 6 Q17 7 20 4Z" fill="currentColor"/>
+      <path d="M20 4 Q26 6 30 5 Q34 11 36 17 Q33 22 36 27 Q31 33 27 35 Q21 32 15 36 Q9 32 5 27 Q8 21 4 15 Q9 9 13 6 Q17 7 20 4Z" fill="none" stroke="#000" stroke-opacity=".2" stroke-width="1.5"/>
+      <g fill="none" stroke="#000" stroke-opacity=".28" stroke-width="1.6" stroke-linecap="round">
+        <path d="M11 14 Q18 18 14 25"/><path d="M27 11 Q22 18 29 23"/><path d="M17 30 Q23 26 26 31"/>
+      </g>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="wrap">
+  <header>
+    <div class="logo" aria-hidden="true">
+      <svg class="yel"><use href="#round"/></svg>
+      <svg class="grn"><use href="#wrinkled"/></svg>
+    </div>
+    <div>
+      <h1>Cruce dihíbrido de Mendel</h1>
+      <p>Cruza dos plantas de guisante y sigue a la vez dos rasgos de la semilla: la forma (lisa R, rugosa r) y el color (amarilla Y, verde y).</p>
+    </div>
+    <button class="theme" id="themeBtn" aria-label="Cambiar entre tema claro y oscuro">Tema</button>
+  </header>
+
+  <div class="grid">
+    <section class="panel" aria-labelledby="h-padres">
+      <h2 id="h-padres">1. Elige los padres</h2>
+      <p class="sub">Lisa y amarilla son dominantes. Cada gameto lleva un alelo de la forma y uno del color.</p>
+      <div class="presets" role="group" aria-label="Cruces de ejemplo">
+        <button data-a="RRYY" data-b="rryy">Líneas puras (RRYY × rryy)</button>
+        <button data-a="RrYy" data-b="RrYy">Segunda generación (RrYy × RrYy)</button>
+        <button data-a="RrYy" data-b="rryy">Cruce de prueba (RrYy × rryy)</button>
+      </div>
+      <div class="parents">
+        <div>
+          <div class="pt">Padre 1</div>
+          <label class="p" for="aShape">Forma</label>
+          <select id="aShape"></select>
+          <label class="p" for="aColor">Color</label>
+          <select id="aColor"></select>
+          <div class="gen" id="genA"></div>
+        </div>
+        <div class="x" aria-hidden="true">×</div>
+        <div>
+          <div class="pt">Padre 2</div>
+          <label class="p" for="bShape">Forma</label>
+          <select id="bShape"></select>
+          <label class="p" for="bColor">Color</label>
+          <select id="bColor"></select>
+          <div class="gen" id="genB"></div>
+        </div>
+      </div>
+      <div class="legend">
+        <span><svg class="yel"><use href="#round"/></svg> Lisa amarilla</span>
+        <span><svg class="grn"><use href="#round"/></svg> Lisa verde</span>
+        <span><svg class="yel"><use href="#wrinkled"/></svg> Rugosa amarilla</span>
+        <span><svg class="grn"><use href="#wrinkled"/></svg> Rugosa verde</span>
+      </div>
+    </section>
+
+    <section class="panel" aria-labelledby="h-punnett">
+      <h2 id="h-punnett">2. Cuadro de Punnett</h2>
+      <p class="sub">Las 16 combinaciones de gametos. Columnas: Padre 1. Filas: Padre 2.</p>
+      <div class="punnett" id="punnett"></div>
+      <p class="expect" id="expect" aria-live="polite"></p>
+    </section>
+
+    <section class="panel full" aria-labelledby="h-sim">
+      <h2 id="h-sim">3. Fecunda y cuenta</h2>
+      <p class="sub">Cada fecundación elige al azar un gameto de cada padre. Con pocos descendientes los números bailan; con cientos se acercan a lo esperado.</p>
+      <div class="actions">
+        <button class="primary" data-n="1">Fecundar 1</button>
+        <button data-n="10">+10</button>
+        <button data-n="100">+100</button>
+        <button data-n="1000">+1000</button>
+        <button id="reset">Reiniciar</button>
+        <span class="total ui" aria-live="polite">Descendientes: <b id="total">0</b></span>
+      </div>
+
+      <div class="grid" style="gap:26px">
+        <div>
+          <h3>Fenotipos</h3>
+          <div class="bars" id="barsF"></div>
+          <p class="note">La marca vertical indica el porcentaje esperado según el cuadro de Punnett.</p>
+          <div class="ratio">
+            <div><small>Proporción observada (lisa amarilla : lisa verde : rugosa amarilla : rugosa verde)</small><strong id="ratioObs">—</strong></div>
+            <div><small>Proporción esperada</small><strong id="ratioExp">—</strong></div>
+          </div>
+        </div>
+        <div>
+          <h3>Genotipos</h3>
+          <div class="bars" id="barsG"></div>
+          <div class="sep"></div>
+          <h3>Cada rasgo por separado</h3>
+          <div class="marg">
+            <div class="ratio" style="margin:0"><div><small>Lisa : rugosa</small><strong id="mShape">—</strong><small id="mShapeE"></small></div></div>
+            <div class="ratio" style="margin:0"><div><small>Amarilla : verde</small><strong id="mColor">—</strong><small id="mColorE"></small></div></div>
+          </div>
+          <div class="sep"></div>
+          <h3>Últimas semillas</h3>
+          <div class="field" id="field"><div class="empty">Aún no hay descendientes. Pulsa «Fecundar 1».</div></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel full">
+      <div class="explain">
+        <div><h3>Segregación independiente</h3><p>Los alelos de la forma y del color se reparten en los gametos sin depender uno del otro, así que aparecen las cuatro combinaciones.</p></div>
+        <div><h3>La proporción 9 : 3 : 3 : 1</h3><p>Al cruzar dos dihíbridos RrYy, 9 de cada 16 semillas son lisas amarillas, 3 lisas verdes, 3 rugosas amarillas y 1 rugosa verde.</p></div>
+        <div><h3>Dos cruces en uno</h3><p>Si miras solo la forma, o solo el color, verás la proporción 3 : 1 del cruce monohíbrido. Compruébalo en «Cada rasgo por separado».</p></div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script>
+(function(){
+  var $ = function(id){return document.getElementById(id)};
+  var PHENO = [
+    {k:"RY", name:"Lisa amarilla", shape:"round", col:"yel"},
+    {k:"Ry", name:"Lisa verde", shape:"round", col:"grn"},
+    {k:"rY", name:"Rugosa amarilla", shape:"wrinkled", col:"yel"},
+    {k:"ry", name:"Rugosa verde", shape:"wrinkled", col:"grn"}
+  ];
+  var GENOS = ["RRYY","RRYy","RRyy","RrYY","RrYy","Rryy","rrYY","rrYy","rryy"];
+  var state = {a:"RRYY", b:"rryy", counts:{}, recent:[]};
+
+  function sortPair(x,y,up){ return (x===up||y===up) ? (x===up&&y===up ? up+up : up+up.toLowerCase()) : up.toLowerCase()+up.toLowerCase(); }
+  function childGeno(g1,g2){ // g1,g2 = gametos "RY"
+    return sortPair(g1[0],g2[0],"R") + sortPair(g1[1],g2[1],"Y");
+  }
+  function pheno(g){ return (g.indexOf("R")>=0?"R":"r") + (g.indexOf("Y")>=0?"Y":"y"); }
+  function pinfo(k){ return PHENO.filter(function(p){return p.k===k})[0]; }
+  function seedSvg(g){
+    var p = pinfo(pheno(g));
+    return '<svg class="'+p.col+'" aria-hidden="true"><use href="#'+p.shape+'"/></svg>';
+  }
+  function gametes(g){ // "RrYy" -> 4 gametos
+    var s=[g[0],g[1]], c=[g[2],g[3]], out=[];
+    s.forEach(function(x){ c.forEach(function(y){ out.push(x+y); }); });
+    return out;
+  }
+  function resetCounts(){ state.counts={}; GENOS.forEach(function(g){state.counts[g]=0}); state.recent=[]; }
+
+  function expected(){
+    var ga=gametes(state.a), gb=gametes(state.b), e={};
+    GENOS.forEach(function(g){e[g]=0});
+    ga.forEach(function(x){ gb.forEach(function(y){ e[childGeno(x,y)]+=1/16; }); });
+    return e;
+  }
+  function phenoTotals(map){
+    var t={RY:0,Ry:0,rY:0,ry:0};
+    GENOS.forEach(function(g){ t[pheno(g)]+=map[g]; });
+    return t;
+  }
+  function num(n){ return (Math.round(n*10)/10).toString().replace(".",","); }
+
+  function fillSelects(){
+    var shape = [["RR","RR · lisa pura"],["Rr","Rr · lisa híbrida"],["rr","rr · rugosa"]];
+    var color = [["YY","YY · amarilla pura"],["Yy","Yy · amarilla híbrida"],["yy","yy · verde"]];
+    function opts(arr){ return arr.map(function(o){return '<option value="'+o[0]+'">'+o[1]+'</option>'}).join(""); }
+    ["aShape","bShape"].forEach(function(id){ $(id).innerHTML = opts(shape); });
+    ["aColor","bColor"].forEach(function(id){ $(id).innerHTML = opts(color); });
+  }
+  function descr(g){
+    var p = pinfo(pheno(g));
+    return p.name.toLowerCase();
+  }
+  function renderParents(){
+    $("aShape").value = state.a.slice(0,2); $("aColor").value = state.a.slice(2);
+    $("bShape").value = state.b.slice(0,2); $("bColor").value = state.b.slice(2);
+    $("genA").innerHTML = state.a + '<small>Semilla '+descr(state.a)+'. Gametos: '+unique(gametes(state.a)).join(", ")+'</small>';
+    $("genB").innerHTML = state.b + '<small>Semilla '+descr(state.b)+'. Gametos: '+unique(gametes(state.b)).join(", ")+'</small>';
+    document.querySelectorAll(".presets button").forEach(function(b){
+      b.classList.toggle("on", b.dataset.a===state.a && b.dataset.b===state.b);
+    });
+  }
+  function unique(a){ return a.filter(function(x,i){return a.indexOf(x)===i}); }
+
+  function renderPunnett(){
+    var ga=gametes(state.a), gb=gametes(state.b);
+    var h='<div></div>'+ga.map(function(x){return '<div class="h"><span>'+x+'</span></div>'}).join("");
+    gb.forEach(function(y,j){
+      h+='<div class="h"><span>'+y+'</span></div>';
+      ga.forEach(function(x,i){
+        var g=childGeno(x,y);
+        h+='<div class="cell" id="c'+i+j+'" role="img" aria-label="Genotipo '+g+', semilla '+descr(g)+'"><b>'+g+'</b>'+seedSvg(g)+'</div>';
+      });
+    });
+    $("punnett").innerHTML=h;
+    var e=expected(), t=phenoTotals(e);
+    var parts=PHENO.filter(function(p){return t[p.k]>0}).map(function(p){return Math.round(t[p.k]*16)+"/16 "+p.name.toLowerCase()});
+    $("expect").innerHTML="<strong>Fenotipos esperados:</strong> "+parts.join(" · ");
+    $("ratioExp").textContent = PHENO.map(function(p){return num(t[p.k]*16)}).join(" : ");
+    var sh = (t.RY+t.Ry)*16, rg=(t.rY+t.ry)*16, ye=(t.RY+t.rY)*16, gr=(t.Ry+t.ry)*16;
+    $("mShapeE").textContent = "Esperado: "+ratio2(sh,rg);
+    $("mColorE").textContent = "Esperado: "+ratio2(ye,gr);
+  }
+  function ratio2(p,w){
+    if(p===0&&w===0) return "—";
+    if(w===0) return "todas dominantes";
+    if(p===0) return "todas recesivas";
+    return num(p/w)+" : 1";
+  }
+
+  function bar(label, n, total, expPct, cls, fillStyle, small){
+    var pct = total ? n/total*100 : 0;
+    return '<div class="bar '+(small?'g':'')+'"><span class="lab">'+label+'</span><div class="track"><div class="fill" style="width:'+pct+'%;'+fillStyle+'"></div><div class="tick" style="left:calc('+expPct+'% - 1px)"></div><span class="val">'+n+' ('+num(pct)+'%)</span></div></div>';
+  }
+  function renderBars(){
+    var total = GENOS.reduce(function(s,g){return s+state.counts[g]},0);
+    $("total").textContent=total;
+    var e=expected(), te=phenoTotals(e), tc=phenoTotals(state.counts);
+
+    $("barsF").innerHTML = PHENO.map(function(p){
+      var lab = '<svg class="'+p.col+'" aria-hidden="true"><use href="#'+p.shape+'"/></svg>'+p.name;
+      return bar(lab, tc[p.k], total, te[p.k]*100, "", "background:var(--"+(p.col==="yel"?"yellow":"green")+")", false);
+    }).join("");
+
+    $("barsG").innerHTML = GENOS.map(function(g){
+      var p=pinfo(pheno(g));
+      return bar(g, state.counts[g], total, e[g]*100, "", "background:var(--"+(p.col==="yel"?"yellow":"green")+");opacity:"+(p.shape==="round"?1:.7), true);
+    }).join("");
+
+    if(total){
+      $("ratioObs").textContent = PHENO.map(function(p){return num(tc[p.k]/total*16)}).join(" : ");
+      var pr=tc.RY+tc.Ry, wr=tc.rY+tc.ry, ye=tc.RY+tc.rY, gr=tc.Ry+tc.ry;
+      $("mShape").textContent = ratio2(pr,wr);
+      $("mColor").textContent = ratio2(ye,gr);
+    } else {
+      $("ratioObs").textContent="—"; $("mShape").textContent="—"; $("mColor").textContent="—";
+    }
+    $("field").innerHTML = state.recent.length ? state.recent.map(seedSvg).join("") : '<div class="empty">Aún no hay descendientes. Pulsa «Fecundar 1».</div>';
+  }
+
+  var hitTimer;
+  function highlight(i,j){
+    document.querySelectorAll(".cell.hit").forEach(function(c){c.classList.remove("hit")});
+    var c=$("c"+i+j); if(c) c.classList.add("hit");
+    clearTimeout(hitTimer);
+    hitTimer=setTimeout(function(){ if(c) c.classList.remove("hit"); },900);
+  }
+  function fertilize(n){
+    var ga=gametes(state.a), gb=gametes(state.b), li=0, lj=0;
+    for(var k=0;k<n;k++){
+      var i=Math.floor(Math.random()*4), j=Math.floor(Math.random()*4);
+      var g=childGeno(ga[i],gb[j]);
+      state.counts[g]++; state.recent.unshift(g); li=i; lj=j;
+    }
+    if(state.recent.length>300) state.recent.length=300;
+    highlight(li,lj); renderBars();
+  }
+  function setParents(a,b){
+    state.a=a; state.b=b; resetCounts();
+    renderParents(); renderPunnett(); renderBars();
+  }
+
+  fillSelects();
+  function fromSelects(){ setParents($("aShape").value+$("aColor").value, $("bShape").value+$("bColor").value); }
+  ["aShape","aColor","bShape","bColor"].forEach(function(id){ $(id).addEventListener("change", fromSelects); });
+  document.querySelectorAll(".presets button").forEach(function(b){
+    b.addEventListener("click", function(){ setParents(b.dataset.a,b.dataset.b); });
+  });
+  document.querySelectorAll("[data-n]").forEach(function(b){
+    b.addEventListener("click", function(){ fertilize(parseInt(b.dataset.n,10)); });
+  });
+  $("reset").addEventListener("click", function(){ resetCounts(); renderBars(); });
+  $("themeBtn").addEventListener("click", function(){
+    var r=document.documentElement;
+    var dark = r.getAttribute("data-theme")==="dark" || (!r.getAttribute("data-theme") && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    r.setAttribute("data-theme", dark ? "light" : "dark");
+  });
+
+  setParents("RrYy","RrYy");
+})();
+</script>
+</body>
+</html>

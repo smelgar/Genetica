@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<!-- saved from url=(0074)file:///home/smelgar/Descargas/Cruce%20monoh%C3%ADbrido%20de%20Mendel.html -->
+<html lang="es"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cruce monohíbrido de Mendel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com/">
+<link href="./Cruce_monohíbrido_de_Mendel_files/css2" rel="stylesheet">
+<style>
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  --bg:#EDF1F0;
+  --panel:#F8FAF9;
+  --ink:#16302B;
+  --muted:#5B706B;
+  --line:#C9D5D2;
+  --purple:#7A3FA3;
+  --purple-soft:#E6D8F0;
+  --white-flower:#FFFFFF;
+  --white-stroke:#8FA39E;
+  --accent:#2F7D5B;
+  --hl:#F2C94C;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F1C19;--panel:#162824;--ink:#E3EEEA;--muted:#93A9A3;--line:#2A423D;
+    --purple:#B084D6;--purple-soft:#34244A;--white-flower:#F4F7F6;--white-stroke:#6E8680;--accent:#5FBF92;--hl:#E5B93A;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F1C19;--panel:#162824;--ink:#E3EEEA;--muted:#93A9A3;--line:#2A423D;
+  --purple:#B084D6;--purple-soft:#34244A;--white-flower:#F4F7F6;--white-stroke:#6E8680;--accent:#5FBF92;--hl:#E5B93A;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Source Serif 4",Georgia,"Times New Roman",serif;font-size:17px;line-height:1.6}
+h1,h2,h3,button,select,.ui{font-family:"Familjen Grotesk","Helvetica Neue",Arial,sans-serif}
+.wrap{max-width:1080px;margin:0 auto;padding:28px 18px 48px}
+header{display:flex;gap:18px;align-items:center;margin-bottom:26px}
+header svg{flex:none;width:76px;height:76px;color:var(--purple)}
+h1{font-size:clamp(28px,5vw,44px);line-height:1.05;margin:0 0 6px;font-weight:700;letter-spacing:-.02em}
+header p{margin:0;color:var(--muted);max-width:60ch}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
+@media (max-width:820px){.grid{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px}
+.panel.full{grid-column:1/-1}
+h2{font-size:20px;margin:0 0 4px;font-weight:600}
+.sub{margin:0 0 14px;color:var(--muted);font-size:15px}
+.presets{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
+button{font-size:15px;font-weight:600;color:var(--ink);background:transparent;border:1.5px solid var(--line);border-radius:999px;padding:8px 15px;cursor:pointer;transition:background .15s,border-color .15s}
+button:hover{border-color:var(--accent)}
+button:focus-visible,select:focus-visible{outline:3px solid var(--hl);outline-offset:2px}
+button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+button.primary:hover{filter:brightness(1.08)}
+.parents{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:end}
+.parents .x{font-size:26px;color:var(--muted);padding-bottom:10px;font-family:"Familjen Grotesk",sans-serif}
+label.p{display:block;font-family:"Familjen Grotesk",sans-serif;font-size:14px;color:var(--muted);margin-bottom:4px}
+select{width:100%;font-size:16px;padding:9px 10px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink)}
+.gam{display:flex;gap:6px;margin-top:10px;align-items:center;min-height:34px;font-size:14px;color:var(--muted)}
+.gam .g{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-family:"Familjen Grotesk",sans-serif;font-weight:700;font-size:15px;border:2px solid var(--ink)}
+.g.D{background:var(--purple);border-color:var(--purple);color:#fff}
+.g.r{background:var(--white-flower);border-color:var(--white-stroke);color:var(--ink)}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:14px;color:var(--muted);margin-top:16px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend svg{width:22px;height:22px}
+.fl-p{color:var(--purple)}
+.fl-w{color:var(--white-flower)}
+.fl-w .pet{stroke:var(--white-stroke);stroke-width:2}
+
+/* Punnett */
+.punnett{display:grid;grid-template-columns:auto repeat(2,1fr);grid-template-rows:auto repeat(2,1fr);gap:6px;max-width:340px;margin:6px auto 0}
+.punnett .h{display:grid;place-items:center;font-family:"Familjen Grotesk",sans-serif;font-weight:700;font-size:18px;min-height:40px;min-width:40px}
+.cell{aspect-ratio:1;border-radius:10px;border:1.5px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:var(--bg);transition:background .2s,border-color .2s,transform .2s}
+.cell b{font-family:"Familjen Grotesk",sans-serif;font-size:22px;letter-spacing:.02em}
+.cell svg{width:30px;height:30px}
+.cell.hit{border-color:var(--hl);background:color-mix(in srgb,var(--hl) 28%,var(--bg));transform:scale(1.04)}
+.expect{margin:16px 0 0;text-align:center;font-size:15px}
+.expect strong{font-family:"Familjen Grotesk",sans-serif}
+
+/* Simulación */
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.total{font-family:"Familjen Grotesk",sans-serif;font-size:15px;color:var(--muted);margin-left:auto;align-self:center}
+.total b{color:var(--ink);font-size:20px}
+.bars{display:grid;gap:10px}
+.bar{display:grid;grid-template-columns:78px 1fr;gap:10px;align-items:center;font-family:"Familjen Grotesk",sans-serif;font-size:15px}
+.bar .track{position:relative;height:26px;background:var(--bg);border-radius:7px;border:1px solid var(--line)}
+.bar .fill{position:absolute;inset:0 auto 0 0;width:0;border-radius:6px;transition:width .35s ease}
+.bar .tick{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--ink);opacity:.75}
+.bar .val{position:absolute;left:8px;top:50%;transform:translateY(-50%);font-size:13px;font-weight:600;color:var(--ink);white-space:nowrap;mix-blend-mode:normal;text-shadow:0 0 4px var(--bg),0 0 4px var(--bg)}
+.sep{height:1px;background:var(--line);margin:14px 0}
+.note{font-size:14px;color:var(--muted);margin:10px 0 0}
+.ratio{margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.ratio div{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--bg)}
+.ratio small{display:block;font-family:"Familjen Grotesk",sans-serif;font-size:13px;color:var(--muted)}
+.ratio strong{font-family:"Familjen Grotesk",sans-serif;font-size:24px}
+.field{display:flex;flex-wrap:wrap;gap:4px;max-height:210px;overflow:auto;padding:4px;border-radius:10px;background:var(--bg);border:1px solid var(--line);min-height:56px;align-content:flex-start}
+.field svg{width:22px;height:22px;flex:none}
+.empty{color:var(--muted);font-size:15px;padding:10px 6px}
+.explain{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;font-size:16px}
+@media (max-width:820px){.explain{grid-template-columns:1fr}}
+.explain h3{font-size:17px;margin:0 0 4px}
+.explain p{margin:0}
+.theme{margin-left:auto;align-self:flex-start}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="flower" viewBox="0 0 40 40">
+      <g fill="currentColor">
+        <circle class="pet" cx="20" cy="9" r="7.5"></circle>
+        <circle class="pet" cx="30.5" cy="16.5" r="7.5"></circle>
+        <circle class="pet" cx="26.5" cy="29" r="7.5"></circle>
+        <circle class="pet" cx="13.5" cy="29" r="7.5"></circle>
+        <circle class="pet" cx="9.5" cy="16.5" r="7.5"></circle>
+      </g>
+      <circle cx="20" cy="20" r="5" fill="#F2C94C"></circle>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="wrap">
+  <header>
+    <svg viewBox="0 0 40 40" aria-hidden="true"><use href="#flower"></use></svg>
+    <div>
+      <h1>Cruce monohíbrido de Mendel</h1>
+      <p>Cruza dos plantas de guisante y observa cómo se reparte el color de la flor. El morado (P) domina sobre el blanco (p).</p>
+    </div>
+    <button class="theme" id="themeBtn" aria-label="Cambiar entre tema claro y oscuro">Tema</button>
+  </header>
+
+  <div class="grid">
+    <section class="panel" aria-labelledby="h-padres">
+      <h2 id="h-padres">1. Elige los padres</h2>
+      <p class="sub">Cada padre aporta un alelo al azar a cada descendiente.</p>
+      <div class="presets" role="group" aria-label="Cruces de ejemplo">
+        <button data-a="PP" data-b="pp" class="on">Líneas puras (PP × pp)</button>
+        <button data-a="Pp" data-b="Pp">Segunda generación (Pp × Pp)</button>
+        <button data-a="Pp" data-b="pp">Cruce de prueba (Pp × pp)</button>
+      </div>
+      <div class="parents">
+        <div>
+          <label class="p" for="selA">Padre 1</label>
+          <select id="selA">
+            <option value="PP">PP · morada pura</option>
+            <option value="Pp">Pp · morada híbrida</option>
+            <option value="pp">pp · blanca</option>
+          </select>
+          <div class="gam" id="gamA">Gametos: <span class="g D">P</span><span class="g D">P</span></div>
+        </div>
+        <div class="x" aria-hidden="true">×</div>
+        <div>
+          <label class="p" for="selB">Padre 2</label>
+          <select id="selB">
+            <option value="PP">PP · morada pura</option>
+            <option value="Pp">Pp · morada híbrida</option>
+            <option value="pp">pp · blanca</option>
+          </select>
+          <div class="gam" id="gamB">Gametos: <span class="g r">p</span><span class="g r">p</span></div>
+        </div>
+      </div>
+      <div class="legend">
+        <span><svg class="fl-p"><use href="#flower"></use></svg> Morada: PP o Pp</span>
+        <span><svg class="fl-w"><use href="#flower"></use></svg> Blanca: pp</span>
+      </div>
+    </section>
+
+    <section class="panel" aria-labelledby="h-punnett">
+      <h2 id="h-punnett">2. Cuadro de Punnett</h2>
+      <p class="sub">Las cuatro combinaciones posibles de gametos.</p>
+      <div class="punnett" id="punnett"><div></div><div class="h"><span class="g D">P</span></div><div class="h"><span class="g D">P</span></div><div class="h"><span class="g r">p</span></div><div class="cell" id="c00" role="img" aria-label="Genotipo Pp, flor morada"><b>Pp</b><svg class="fl-p" aria-hidden="true"><use href="#flower"></use></svg></div><div class="cell" id="c10" role="img" aria-label="Genotipo Pp, flor morada"><b>Pp</b><svg class="fl-p" aria-hidden="true"><use href="#flower"></use></svg></div><div class="h"><span class="g r">p</span></div><div class="cell" id="c01" role="img" aria-label="Genotipo Pp, flor morada"><b>Pp</b><svg class="fl-p" aria-hidden="true"><use href="#flower"></use></svg></div><div class="cell" id="c11" role="img" aria-label="Genotipo Pp, flor morada"><b>Pp</b><svg class="fl-p" aria-hidden="true"><use href="#flower"></use></svg></div></div>
+      <p class="expect" id="expect" aria-live="polite"><strong>Genotipos:</strong> 100% Pp<br><strong>Fenotipos:</strong> 100% morada, 0% blanca</p>
+    </section>
+
+    <section class="panel full" aria-labelledby="h-sim">
+      <h2 id="h-sim">3. Fecunda y cuenta</h2>
+      <p class="sub">Cada fecundación elige un gameto de cada padre al azar. Con pocos descendientes los resultados se alejan de lo esperado; con muchos se acercan.</p>
+      <div class="actions">
+        <button class="primary" data-n="1">Fecundar 1</button>
+        <button data-n="10">+10</button>
+        <button data-n="100">+100</button>
+        <button data-n="1000">+1000</button>
+        <button id="reset">Reiniciar</button>
+        <span class="total ui" aria-live="polite">Descendientes: <b id="total">0</b></span>
+      </div>
+
+      <div class="grid" style="gap:24px">
+        <div>
+          <h3 style="margin:0 0 10px;font-size:16px">Genotipos</h3>
+          <div class="bars" id="barsG"><div class="bar"><span>PP</span><div class="track"><div class="fill" style="width:0%;background:var(--purple);"></div><div class="tick" style="left:calc(0% - 1px)"></div><span class="val">0 (0,0%)</span></div></div><div class="bar"><span>Pp</span><div class="track"><div class="fill" style="width:0%;background:color-mix(in srgb,var(--purple) 55%,var(--purple-soft));"></div><div class="tick" style="left:calc(100% - 1px)"></div><span class="val">0 (0,0%)</span></div></div><div class="bar"><span>pp</span><div class="track"><div class="fill" style="width:0%;background:var(--white-flower);outline:1.5px solid var(--white-stroke);outline-offset:-1.5px"></div><div class="tick" style="left:calc(0% - 1px)"></div><span class="val">0 (0,0%)</span></div></div></div>
+          <div class="sep"></div>
+          <h3 style="margin:0 0 10px;font-size:16px">Fenotipos</h3>
+          <div class="bars" id="barsF"><div class="bar"><span>Morada</span><div class="track"><div class="fill" style="width:0%;background:var(--purple);"></div><div class="tick" style="left:calc(100% - 1px)"></div><span class="val">0 (0,0%)</span></div></div><div class="bar"><span>Blanca</span><div class="track"><div class="fill" style="width:0%;background:var(--white-flower);outline:1.5px solid var(--white-stroke);outline-offset:-1.5px"></div><div class="tick" style="left:calc(0% - 1px)"></div><span class="val">0 (0,0%)</span></div></div></div>
+          <p class="note">La marca vertical indica el porcentaje esperado según el cuadro de Punnett.</p>
+        </div>
+        <div>
+          <h3 style="margin:0 0 10px;font-size:16px">Últimas flores</h3>
+          <div class="field" id="field"><div class="empty">Aún no hay descendientes. Pulsa «Fecundar 1».</div></div>
+          <div class="ratio">
+            <div><small>Proporción observada (morada : blanca)</small><strong id="ratioObs">—</strong></div>
+            <div><small>Proporción esperada</small><strong id="ratioExp">todas moradas</strong></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel full">
+      <div class="explain">
+        <div><h3>Ley de la segregación</h3><p>Cada individuo tiene dos alelos para el rasgo, y al formar gametos los separa: cada gameto lleva solo uno.</p></div>
+        <div><h3>Dominancia</h3><p>Una planta con al menos un alelo P tiene flores moradas. Solo pp da flores blancas.</p></div>
+        <div><h3>La proporción 3 : 1</h3><p>Al cruzar dos híbridos Pp, un cuarto de los descendientes es PP, la mitad Pp y un cuarto pp: tres morados por cada blanco.</p></div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script>
+(function(){
+  var GENOS = ["PP","Pp","pp"];
+  var state = {a:"PP", b:"pp", counts:{PP:0,Pp:0,pp:0}, recent:[]};
+  var $ = function(id){return document.getElementById(id)};
+
+  function isPurple(g){return g!=="pp"}
+  function flowerSvg(g){
+    return '<svg class="'+(isPurple(g)?'fl-p':'fl-w')+'" aria-hidden="true"><use href="#flower"/></svg>';
+  }
+  function key(x,y){return (x==="P"||y==="P") ? (x==="P"&&y==="P"?"PP":"Pp") : "pp"}
+  function gametes(g){return g.split("")}
+  function gChip(a){return '<span class="g '+(a==="P"?"D":"r")+'">'+a+'</span>'}
+
+  function expected(){
+    var ga = gametes(state.a), gb = gametes(state.b), e = {PP:0,Pp:0,pp:0};
+    ga.forEach(function(x){gb.forEach(function(y){e[key(x,y)]++})});
+    return {PP:e.PP/4, Pp:e.Pp/4, pp:e.pp/4};
+  }
+  function fmtRatio(p,w){
+    if(p===0&&w===0) return "—";
+    if(w===0) return "todas moradas";
+    if(p===0) return "todas blancas";
+    return (Math.round(p/w*100)/100).toString().replace(".",",")+" : 1";
+  }
+
+  function renderParents(){
+    $("selA").value = state.a; $("selB").value = state.b;
+    $("gamA").innerHTML = "Gametos: "+gametes(state.a).map(gChip).join("");
+    $("gamB").innerHTML = "Gametos: "+gametes(state.b).map(gChip).join("");
+    document.querySelectorAll(".presets button").forEach(function(b){
+      b.classList.toggle("on", b.dataset.a===state.a && b.dataset.b===state.b);
+    });
+  }
+
+  function renderPunnett(){
+    var ga = gametes(state.a), gb = gametes(state.b);
+    var h = '<div></div>' + ga.map(function(x){return '<div class="h">'+gChip(x)+'</div>'}).join("");
+    gb.forEach(function(y,j){
+      h += '<div class="h">'+gChip(y)+'</div>';
+      ga.forEach(function(x,i){
+        var g = key(x,y);
+        h += '<div class="cell" id="c'+i+j+'" role="img" aria-label="Genotipo '+g+', flor '+(isPurple(g)?'morada':'blanca')+'"><b>'+g+'</b>'+flowerSvg(g)+'</div>';
+      });
+    });
+    $("punnett").innerHTML = h;
+    var e = expected(), pPurple = e.PP+e.Pp, pWhite = e.pp;
+    var gtxt = GENOS.filter(function(g){return e[g]>0}).map(function(g){return Math.round(e[g]*100)+"% "+g}).join(" · ");
+    $("expect").innerHTML = "<strong>Genotipos:</strong> "+gtxt+"<br><strong>Fenotipos:</strong> "+Math.round(pPurple*100)+"% morada, "+Math.round(pWhite*100)+"% blanca";
+    var rp = Math.round(pPurple*4), rw = Math.round(pWhite*4);
+    $("ratioExp").textContent = rw===0 ? "todas moradas" : (rp===0 ? "todas blancas" : (rp/rw).toString().replace(".",",")+" : 1");
+  }
+
+  function renderBars(){
+    var total = state.counts.PP+state.counts.Pp+state.counts.pp, e = expected();
+    $("total").textContent = total;
+    function bar(label, n, expPct, color, stroke){
+      var pct = total? n/total*100 : 0;
+      return '<div class="bar"><span>'+label+'</span><div class="track"><div class="fill" style="width:'+pct+'%;background:'+color+';'+(stroke?'outline:1.5px solid '+stroke+';outline-offset:-1.5px':'')+'"></div><div class="tick" style="left:calc('+expPct+'% - 1px)"></div><span class="val">'+n+' ('+pct.toFixed(1).replace(".",",")+'%)</span></div></div>';
+    }
+    $("barsG").innerHTML =
+      bar("PP", state.counts.PP, e.PP*100, "var(--purple)") +
+      bar("Pp", state.counts.Pp, e.Pp*100, "color-mix(in srgb,var(--purple) 55%,var(--purple-soft))") +
+      bar("pp", state.counts.pp, e.pp*100, "var(--white-flower)", "var(--white-stroke)");
+    var pu = state.counts.PP+state.counts.Pp, wh = state.counts.pp;
+    $("barsF").innerHTML =
+      bar("Morada", pu, (e.PP+e.Pp)*100, "var(--purple)") +
+      bar("Blanca", wh, e.pp*100, "var(--white-flower)", "var(--white-stroke)");
+    $("ratioObs").textContent = total ? fmtRatio(pu,wh) : "—";
+    var f = $("field");
+    if(!state.recent.length){ f.innerHTML = '<div class="empty">Aún no hay descendientes. Pulsa «Fecundar 1».</div>'; }
+    else { f.innerHTML = state.recent.map(flowerSvg).join(""); }
+  }
+
+  var hitTimer;
+  function highlight(i,j){
+    document.querySelectorAll(".cell.hit").forEach(function(c){c.classList.remove("hit")});
+    var c = $("c"+i+j); if(c){ c.classList.add("hit"); }
+    clearTimeout(hitTimer);
+    hitTimer = setTimeout(function(){ if(c) c.classList.remove("hit"); }, 900);
+  }
+
+  function fertilize(n){
+    var ga = gametes(state.a), gb = gametes(state.b), li=0, lj=0;
+    for(var k=0;k<n;k++){
+      var i = Math.floor(Math.random()*ga.length), j = Math.floor(Math.random()*gb.length);
+      var g = key(ga[i],gb[j]);
+      state.counts[g]++;
+      state.recent.unshift(g);
+      li=i; lj=j;
+    }
+    if(state.recent.length>300) state.recent.length = 300;
+    highlight(li,lj);
+    renderBars();
+  }
+
+  function reset(){
+    state.counts = {PP:0,Pp:0,pp:0}; state.recent = [];
+    renderBars();
+  }
+  function setParents(a,b){
+    state.a=a; state.b=b;
+    renderParents(); renderPunnett(); reset();
+  }
+
+  $("selA").addEventListener("change", function(e){ setParents(e.target.value, state.b) });
+  $("selB").addEventListener("change", function(e){ setParents(state.a, e.target.value) });
+  document.querySelectorAll(".presets button").forEach(function(b){
+    b.addEventListener("click", function(){ setParents(b.dataset.a, b.dataset.b) });
+  });
+  document.querySelectorAll("[data-n]").forEach(function(b){
+    b.addEventListener("click", function(){ fertilize(parseInt(b.dataset.n,10)) });
+  });
+  $("reset").addEventListener("click", reset);
+  $("themeBtn").addEventListener("click", function(){
+    var r = document.documentElement;
+    var dark = r.getAttribute("data-theme")==="dark" || (!r.getAttribute("data-theme") && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    r.setAttribute("data-theme", dark ? "light" : "dark");
+  });
+
+  setParents("PP","pp");
+})();
+</script>
+
+
+</body></html>

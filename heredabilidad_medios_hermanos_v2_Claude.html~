@@ -99,7 +99,6 @@ th:first-child,td:first-child{text-align:left}
 <li>Por eso <b>h² = 4t</b>. El factor 4 también multiplica el error de la estimación.</li>
 <li>Con pocos padres la estimación varía mucho y puede salir negativa o mayor que 1. Aumentar padres reduce el error más que aumentar hijos por padre.</li>
 <li>Los medios hermanos de padre aíslan V<sub>A</sub> porque no comparten madre: se evita el efecto materno y la dominancia (en este modelo no hay ambiente común).</li>
-<br> Observación: esta simulación fue generada por inteligencia artificial. <br>
 </ul>
 </section>
 </main>

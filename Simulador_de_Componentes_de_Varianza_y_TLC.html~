@@ -72,6 +72,7 @@
                     <span class="math-box p-2 rounded block text-center text-sm">Varianza del error de la media = σ² dentro / n</span>
                     <br>
                     Por eso, al multiplicar la varianza de las medias por <strong>n</strong>, "descomprimimos" el ruido y podemos restarlo para aislar la varianza real entre grupos.
+                    <br>
                     <br> Observación: esta simulación fue generada por inteligencia artificial. <br>
                 </p>
             </div>

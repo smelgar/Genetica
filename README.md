@@ -28,7 +28,9 @@
 
 -[Selection and response to selection simulation](https://smelgar.github.io/Genetica/Selection_and_Response_to_Selection.html)
 
+-[Cruce monohíbrido](https://smelgar.github.io/Genetica/Cruce_monohíbrido_de_Mendel.html)
 
+-[Cruce dihíbrido](https://smelgar.github.io/Genetica/Cruce_dihíbrido_de_Mendel.html)
 
 
 
