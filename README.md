@@ -14,7 +14,7 @@
 
 -[Simulador de heredabilidad con medios hermanos](https://smelgar.github.io/Genetica/heredabilidad_medios_hermanos_v2_Claude.html)
 
--[Simulador de heredabilidad con análisis de hermanos](https://smelgar.github.io/Genetica/heredabilidad_diseno_anidado%20Claude.html)
+-[Simulador de heredabilidad con análisis de hermanos](https://smelgar.github.io/Genetica/heredabilidad_diseno_anidado_Claude.html)
 
 -[Simulador de teorema del límite central](https://smelgar.github.io/Genetica/teorema_limite_central_Claude.html)
 
